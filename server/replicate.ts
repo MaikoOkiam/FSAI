@@ -41,20 +41,19 @@ export async function generateStyleTransfer(
     target_image: '[BASE64_IMAGE]'
   });
 
-  const output = await replicate.run(
-    "catio-apps/cog-photoaistudio-generate-v2-pro:bd6e2354e39651808b1491cd39a763025a9614e17b09e58c3bab4b64f98a80a1",
-    { input }
-  );
+  const prediction = await replicate.predictions.create({
+    version: "bd6e2354e39651808b1491cd39a763025a9614e17b09e58c3bab4b64f98a80a1",
+    input: input
+  });
 
-  console.log("Received response from Replicate API:", output);
+  // Wait for the prediction to complete
+  const result = await replicate.wait(prediction);
+  console.log("Received response from Replicate API:", result);
 
-  // The API returns an array of image URLs, we take the first one
-  const generatedImageUrl = Array.isArray(output) ? output[0] : output;
-
-  if (!generatedImageUrl || typeof generatedImageUrl !== 'string') {
-    console.error("Invalid response format from Replicate API:", output);
+  if (!result.output || !Array.isArray(result.output) || result.output.length === 0) {
+    console.error("Invalid response format from Replicate API:", result);
     throw new Error("Failed to generate image");
   }
 
-  return generatedImageUrl;
+  return result.output[0];
 }
