@@ -80,6 +80,7 @@ export default function ProfilePage() {
     resolver: zodResolver(userInterestsSchema),
     defaultValues: {
       fashionStyles: user?.interests?.fashionStyles || [],
+      favoriteColors: user?.interests?.favoriteColors || [],
       occasions: user?.interests?.occasions || [],
     },
   });
@@ -110,10 +111,18 @@ export default function ProfilePage() {
     },
   });
 
+  const handleStyleSelection = (styles: string[]) => {
+    interestsForm.setValue('fashionStyles', styles);
+  };
+
+  const handleOccasionSelection = (occasions: string[]) => {
+    interestsForm.setValue('occasions', occasions);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Mein Profil</h1>
 
@@ -180,7 +189,7 @@ export default function ProfilePage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={preferencesForm.control}
                     name="notifications.styleUpdates"
@@ -257,22 +266,24 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Bevorzugte Modestile</FormLabel>
                         <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            multiple
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Wählen Sie Ihre Stile" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {fashionStyles.map((style) => (
-                                <SelectItem key={style} value={style}>
-                                  {style}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-wrap gap-2">
+                            {fashionStyles.map((style) => (
+                              <Button
+                                key={style}
+                                type="button"
+                                variant={field.value.includes(style) ? "default" : "outline"}
+                                onClick={() => {
+                                  const newStyles = field.value.includes(style)
+                                    ? field.value.filter((s: string) => s !== style)
+                                    : [...field.value, style];
+                                  handleStyleSelection(newStyles);
+                                }}
+                                className="rounded-full"
+                              >
+                                {style}
+                              </Button>
+                            ))}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -286,22 +297,24 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Bevorzugte Anlässe</FormLabel>
                         <FormControl>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            multiple
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Wählen Sie Ihre Anlässe" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {occasions.map((occasion) => (
-                                <SelectItem key={occasion} value={occasion}>
-                                  {occasion}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-wrap gap-2">
+                            {occasions.map((occasion) => (
+                              <Button
+                                key={occasion}
+                                type="button"
+                                variant={field.value.includes(occasion) ? "default" : "outline"}
+                                onClick={() => {
+                                  const newOccasions = field.value.includes(occasion)
+                                    ? field.value.filter((o: string) => o !== occasion)
+                                    : [...field.value, occasion];
+                                  handleOccasionSelection(newOccasions);
+                                }}
+                                className="rounded-full"
+                              >
+                                {occasion}
+                              </Button>
+                            ))}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
