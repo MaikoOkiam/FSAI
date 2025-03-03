@@ -1,8 +1,11 @@
-import { User, InsertUser } from "@shared/schema";
+import { User, InsertUser, users } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -13,59 +16,56 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private currentId: number;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.currentId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { 
-      ...insertUser, 
-      id,
-      credits: 10,
-      subscription: "free",
-      subscriptionEnds: null
-    };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        credits: 10,
+        subscription: "free",
+        subscriptionEnds: null,
+      })
+      .returning();
     return user;
   }
 
   async updateUserCredits(id: number, credits: number): Promise<void> {
-    const user = await this.getUser(id);
-    if (user) {
-      this.users.set(id, { ...user, credits });
-    }
+    await db
+      .update(users)
+      .set({ credits })
+      .where(eq(users.id, id));
   }
 
-  async updateUserSubscription(id: number, subscription: string, endDate: string): Promise<void> {
-    const user = await this.getUser(id);
-    if (user) {
-      this.users.set(id, { 
-        ...user, 
-        subscription,
-        subscriptionEnds: endDate
-      });
-    }
+  async updateUserSubscription(
+    id: number,
+    subscription: string,
+    subscriptionEnds: string
+  ): Promise<void> {
+    await db
+      .update(users)
+      .set({ subscription, subscriptionEnds })
+      .where(eq(users.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
