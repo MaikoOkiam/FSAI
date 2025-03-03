@@ -9,20 +9,29 @@ const replicate = new Replicate({
 });
 
 export async function generateStyleTransfer(imageBase64: string): Promise<string> {
-  // Convert base64 to URL
   const input = {
-    image: `data:image/jpeg;base64,${imageBase64}`,
-    prompt: "professional fashion photography style",
-    negative_prompt: "ugly, blurry, low quality",
-    num_inference_steps: 30,
-    guidance_scale: 7.5,
-    controlnet_conditioning_scale: 1.0,
-    control_guidance_start: 0.0,
-    control_guidance_end: 1.0,
+    width: 768,
+    gender: "male",
+    height: 1152,
+    prompt: "A photo of a person img",
+    num_steps: 20,
+    scheduler: "DPM++ SDE Karras",
+    style_name: "(No style)",
+    num_outputs: 1,
+    slider_zoom: 0.5,
+    slider_hands: 0.5,
+    slider_viewer: 5,
+    guidance_scale: 5,
+    enable_fix_face: true,
+    negative_prompt: "nsfw, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry",
+    slider_lighting: 2,
+    slider_add_detail: 2,
+    style_strength_ratio: 25,
+    image: `data:image/jpeg;base64,${imageBase64}`
   };
 
   const output = await replicate.run(
-    "catio-apps/cog-photoaistudio-generate-v2-pro:7c4f4d1c5ffd43be724de467f2cee830ea1cce7f43a01a0b665fe356bc8c9d57",
+    "catio-apps/cog-photoaistudio-generate-v2-pro:bd6e2354e39651808b1491cd39a763025a9614e17b09e58c3bab4b64f98a80a1",
     { input }
   );
 
