@@ -21,7 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@shared/schema";
+import { loginSchema, registerSchema } from "@shared/schema";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -42,9 +42,10 @@ export default function AuthPage() {
   });
 
   const registerForm = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
     },
   });
@@ -53,10 +54,10 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted p-4">
       <div className="w-full max-w-[1200px] grid md:grid-cols-2 gap-8">
         <div className="hidden md:flex flex-col justify-center">
-          <h1 className="text-4xl font-bold mb-4">Welcome to Eva Harper</h1>
+          <h1 className="text-4xl font-bold mb-4">Willkommen bei Eva Harper</h1>
           <p className="text-xl text-muted-foreground mb-8">
-            Your AI-powered fashion companion. Get personalized style advice,
-            virtual try-ons, and more.
+            Ihr KI-gestützter Mode-Begleiter. Erhalten Sie personalisierte Stilberatung,
+            virtuelle Anproben und mehr.
           </p>
           <img
             src="https://images.unsplash.com/photo-1485125639709-a60c3a500bf1"
@@ -68,16 +69,16 @@ export default function AuthPage() {
         <div>
           <Card className="w-full">
             <CardHeader>
-              <CardTitle>Sign In or Register</CardTitle>
+              <CardTitle>Anmelden oder Registrieren</CardTitle>
               <CardDescription>
-                Access your Eva Harper fashion account
+                Greifen Sie auf Ihr Eva Harper Mode-Konto zu
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="register">Register</TabsTrigger>
+                  <TabsTrigger value="register">Registrieren</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login">
@@ -93,7 +94,7 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Benutzername</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
@@ -106,7 +107,7 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel>Passwort</FormLabel>
                             <FormControl>
                               <Input type="password" {...field} />
                             </FormControl>
@@ -119,7 +120,7 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={loginMutation.isPending}
                       >
-                        Sign In
+                        Anmelden
                       </Button>
                     </form>
                   </Form>
@@ -138,9 +139,22 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Benutzername</FormLabel>
                             <FormControl>
                               <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-Mail</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -151,7 +165,7 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel>Passwort</FormLabel>
                             <FormControl>
                               <Input type="password" {...field} />
                             </FormControl>
@@ -164,7 +178,7 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={registerMutation.isPending}
                       >
-                        Create Account
+                        Konto erstellen
                       </Button>
                     </form>
                   </Form>
