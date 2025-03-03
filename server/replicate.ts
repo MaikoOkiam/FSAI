@@ -8,12 +8,16 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-export async function generateStyleTransfer(imageBase64: string): Promise<string> {
+export async function generateStyleTransfer(
+  sourceImageBase64: string,
+  targetImageBase64: string,
+  customPrompt: string
+): Promise<string> {
   const input = {
     width: 768,
     gender: "male",
     height: 1152,
-    prompt: "A photo of a person img",
+    prompt: customPrompt,
     num_steps: 20,
     scheduler: "DPM++ SDE Karras",
     style_name: "(No style)",
@@ -27,7 +31,8 @@ export async function generateStyleTransfer(imageBase64: string): Promise<string
     slider_lighting: 2,
     slider_add_detail: 2,
     style_strength_ratio: 25,
-    image: `data:image/jpeg;base64,${imageBase64}`
+    image: `data:image/jpeg;base64,${sourceImageBase64}`,
+    target_image: `data:image/jpeg;base64,${targetImageBase64}`
   };
 
   const output = await replicate.run(

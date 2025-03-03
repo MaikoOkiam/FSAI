@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,7 +13,10 @@ export default function StyleTransfer() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [sourceImage, setSourceImage] = useState<File | null>(null);
+  const [targetImage, setTargetImage] = useState<File | null>(null);
   const [sourcePreview, setSourcePreview] = useState<string | null>(null);
+  const [targetPreview, setTargetPreview] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState<string>("");
 
   const transferMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -39,7 +43,7 @@ export default function StyleTransfer() {
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSourceImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSourceImage(file);
@@ -47,12 +51,22 @@ export default function StyleTransfer() {
     }
   };
 
+  const handleTargetImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setTargetImage(file);
+      setTargetPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sourceImage) return;
+    if (!sourceImage || !targetImage || !prompt.trim()) return;
 
     const formData = new FormData();
-    formData.append("image", sourceImage);
+    formData.append("sourceImage", sourceImage);
+    formData.append("targetImage", targetImage);
+    formData.append("prompt", prompt);
     transferMutation.mutate(formData);
   };
 
@@ -62,28 +76,56 @@ export default function StyleTransfer() {
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="sourceImage">Upload Style Reference</Label>
+              <Label htmlFor="sourceImage">Erstes Gesichtsbild</Label>
               <Input
                 id="sourceImage"
                 type="file"
                 accept="image/*"
-                onChange={handleImageChange}
+                onChange={handleSourceImageChange}
+              />
+              {sourcePreview && (
+                <div className="relative aspect-square">
+                  <img
+                    src={sourcePreview}
+                    alt="Erstes Bild"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="targetImage">Zweites Gesichtsbild</Label>
+              <Input
+                id="targetImage"
+                type="file"
+                accept="image/*"
+                onChange={handleTargetImageChange}
+              />
+              {targetPreview && (
+                <div className="relative aspect-square">
+                  <img
+                    src={targetPreview}
+                    alt="Zweites Bild"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="prompt">Beschreibung des gewünschten Stils</Label>
+              <Textarea
+                id="prompt"
+                placeholder="z.B. 'professionelles Modefoto im Vintage-Stil'"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
               />
             </div>
 
-            {sourcePreview && (
-              <div className="relative aspect-square">
-                <img
-                  src={sourcePreview}
-                  alt="Source"
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              </div>
-            )}
-
             <Button
               type="submit"
-              disabled={!sourceImage || transferMutation.isPending}
+              disabled={!sourceImage || !targetImage || !prompt.trim() || transferMutation.isPending}
               className="w-full"
             >
               {transferMutation.isPending ? (
@@ -91,11 +133,11 @@ export default function StyleTransfer() {
               ) : (
                 <Wand2 className="h-4 w-4 mr-2" />
               )}
-              Transfer Style
+              Style Transfer starten
             </Button>
 
             <p className="text-sm text-muted-foreground text-center">
-              Credits required: 3 | Remaining: {user?.credits}
+              Credits benötigt: 3 | Verbleibend: {user?.credits}
             </p>
           </form>
         </CardContent>
@@ -103,7 +145,7 @@ export default function StyleTransfer() {
 
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Style Transfer Result</h3>
+          <h3 className="text-lg font-semibold mb-4">Style Transfer Ergebnis</h3>
           {transferMutation.data ? (
             <img
               src={transferMutation.data.url}
@@ -113,7 +155,7 @@ export default function StyleTransfer() {
           ) : (
             <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
               <p className="text-muted-foreground">
-                Your style transfer result will appear here
+                Ihr Style Transfer Ergebnis wird hier erscheinen
               </p>
             </div>
           )}

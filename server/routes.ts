@@ -31,17 +31,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Style transfer endpoint
-  app.post("/api/fashion/transfer", upload.single("image"), async (req, res) => {
+  app.post("/api/fashion/transfer", upload.fields([
+    { name: 'sourceImage', maxCount: 1 },
+    { name: 'targetImage', maxCount: 1 }
+  ]), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const user = req.user!;
     if (user.credits < 3) return res.status(402).json({ error: "Insufficient credits" });
 
     try {
-      const styleUrl = await generateStyleTransfer(req.file!.buffer.toString("base64"));
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const sourceImage = files.sourceImage[0];
+      const targetImage = files.targetImage[0];
+      const prompt = req.body.prompt;
+
+      if (!sourceImage || !targetImage || !prompt) {
+        return res.status(400).json({ error: "Missing required files or prompt" });
+      }
+
+      const styleUrl = await generateStyleTransfer(
+        sourceImage.buffer.toString("base64"),
+        targetImage.buffer.toString("base64"),
+        prompt
+      );
+
       await storage.updateUserCredits(user.id, user.credits - 3);
 
-      // Optional: Save the generated image
+      // Save the generated image
       const savedImage = await storage.saveUserImage(user.id, {
         imageUrl: styleUrl,
         imageType: 'generated',
