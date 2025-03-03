@@ -1,0 +1,357 @@
+import { useAuth } from "@/hooks/use-auth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userPreferencesSchema, userInterestsSchema } from "@shared/schema";
+import { NavBar } from "@/components/layout/nav-bar";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+const fashionStyles = [
+  "Casual",
+  "Business",
+  "Elegant",
+  "Sportlich",
+  "Boho",
+  "Minimalistisch",
+  "Vintage",
+  "Streetwear",
+];
+
+const occasions = [
+  "Alltag",
+  "Büro",
+  "Formal",
+  "Date",
+  "Hochzeit",
+  "Party",
+  "Sport",
+  "Reise",
+];
+
+export default function ProfilePage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const { data: savedImages } = useQuery({
+    queryKey: ["/api/images/saved"],
+  });
+
+  const preferencesForm = useForm({
+    resolver: zodResolver(userPreferencesSchema),
+    defaultValues: {
+      style: user?.preferences?.style || "",
+      notifications: {
+        email: user?.preferences?.notifications?.email || false,
+        styleUpdates: user?.preferences?.notifications?.styleUpdates || false,
+        credits: user?.preferences?.notifications?.credits || false,
+      },
+    },
+  });
+
+  const interestsForm = useForm({
+    resolver: zodResolver(userInterestsSchema),
+    defaultValues: {
+      fashionStyles: user?.interests?.fashionStyles || [],
+      occasions: user?.interests?.occasions || [],
+    },
+  });
+
+  const updatePreferencesMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/user/preferences", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Einstellungen aktualisiert",
+        description: "Ihre Präferenzen wurden erfolgreich gespeichert.",
+      });
+    },
+  });
+
+  const updateInterestsMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PATCH", "/api/user/interests", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Interessen aktualisiert",
+        description: "Ihre Modeinteressen wurden erfolgreich gespeichert.",
+      });
+    },
+  });
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <NavBar />
+      
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Mein Profil</h1>
+
+        <div className="grid gap-8 md:grid-cols-2">
+          {/* Persönliche Informationen */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Persönliche Informationen</CardTitle>
+              <CardDescription>
+                Ihre grundlegenden Kontoinformationen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Benutzername</label>
+                  <p className="mt-1">{user?.username}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">E-Mail</label>
+                  <p className="mt-1">{user?.email}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Kontostand</label>
+                  <p className="mt-1">{user?.credits} Credits</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Benachrichtigungseinstellungen */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Benachrichtigungen</CardTitle>
+              <CardDescription>
+                Verwalten Sie Ihre Benachrichtigungseinstellungen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...preferencesForm}>
+                <form
+                  onSubmit={preferencesForm.handleSubmit((data) =>
+                    updatePreferencesMutation.mutate(data)
+                  )}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={preferencesForm.control}
+                    name="notifications.email"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>E-Mail-Benachrichtigungen</FormLabel>
+                          <FormDescription>
+                            Erhalten Sie Updates zu Ihren Styleanalysen
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={preferencesForm.control}
+                    name="notifications.styleUpdates"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Style-Updates</FormLabel>
+                          <FormDescription>
+                            Benachrichtigungen über neue Modetrends
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={preferencesForm.control}
+                    name="notifications.credits"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Credit-Benachrichtigungen</FormLabel>
+                          <FormDescription>
+                            Erhalten Sie Benachrichtigungen über Ihren Credit-Stand
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    disabled={updatePreferencesMutation.isPending}
+                  >
+                    Einstellungen speichern
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Modeinteressen */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Modeinteressen</CardTitle>
+              <CardDescription>
+                Teilen Sie uns Ihre Modepräferenzen mit
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...interestsForm}>
+                <form
+                  onSubmit={interestsForm.handleSubmit((data) =>
+                    updateInterestsMutation.mutate(data)
+                  )}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={interestsForm.control}
+                    name="fashionStyles"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bevorzugte Modestile</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            multiple
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Wählen Sie Ihre Stile" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fashionStyles.map((style) => (
+                                <SelectItem key={style} value={style}>
+                                  {style}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={interestsForm.control}
+                    name="occasions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bevorzugte Anlässe</FormLabel>
+                        <FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            multiple
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Wählen Sie Ihre Anlässe" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {occasions.map((occasion) => (
+                                <SelectItem key={occasion} value={occasion}>
+                                  {occasion}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    disabled={updateInterestsMutation.isPending}
+                  >
+                    Interessen speichern
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Gespeicherte Bilder */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Meine gespeicherten Bilder</CardTitle>
+              <CardDescription>
+                Ihre hochgeladenen und generierten Bilder
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {savedImages && savedImages.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {savedImages.map((image: any) => (
+                    <div key={image.id} className="relative aspect-square">
+                      <img
+                        src={image.imageUrl}
+                        alt={image.title || "Gespeichertes Bild"}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/50 text-white text-sm rounded-b-lg">
+                        {image.title || "Unbenannt"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Sie haben noch keine Bilder gespeichert
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}

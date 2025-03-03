@@ -10,6 +10,14 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { User } from "lucide-react";
 
 export function NavBar() {
   const { user, logoutMutation } = useAuth();
@@ -46,24 +54,44 @@ export function NavBar() {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-2"
-                    onClick={() => logoutMutation.mutate()}
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {user.username[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>Credits: {user.credits}</span>
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="flex items-center gap-2"
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>
+                            {user.username[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="hidden md:inline">Credits: {user.credits}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile">
+                          <div className="flex items-center">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>Mein Profil</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => logoutMutation.mutate()}
+                        className="text-red-500"
+                      >
+                        Abmelden
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </NavigationMenuItem>
               </>
             ) : (
               <NavigationMenuItem>
                 <Link href="/auth">
-                  <Button>Sign In</Button>
+                  <Button>Anmelden</Button>
                 </Link>
               </NavigationMenuItem>
             )}

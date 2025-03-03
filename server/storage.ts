@@ -1,4 +1,4 @@
-import { User, InsertUser, users } from "@shared/schema";
+import { users, savedImages, type User, type InsertUser, type SavedImage } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -13,6 +13,10 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserCredits(id: number, credits: number): Promise<void>;
   updateUserSubscription(id: number, subscription: string, endDate: string): Promise<void>;
+  updateUserPreferences(id: number, preferences: any): Promise<void>;
+  updateUserInterests(id: number, interests: any): Promise<void>;
+  getUserSavedImages(userId: number): Promise<SavedImage[]>;
+  saveUserImage(userId: number, imageData: Partial<SavedImage>): Promise<SavedImage>;
   sessionStore: session.Store;
 }
 
@@ -65,6 +69,41 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ subscription, subscriptionEnds })
       .where(eq(users.id, id));
+  }
+
+  async updateUserPreferences(id: number, preferences: any): Promise<void> {
+    await db
+      .update(users)
+      .set({ preferences })
+      .where(eq(users.id, id));
+  }
+
+  async updateUserInterests(id: number, interests: any): Promise<void> {
+    await db
+      .update(users)
+      .set({ interests })
+      .where(eq(users.id, id));
+  }
+
+  async getUserSavedImages(userId: number): Promise<SavedImage[]> {
+    return db
+      .select()
+      .from(savedImages)
+      .where(eq(savedImages.userId, userId))
+      .orderBy(savedImages.createdAt);
+  }
+
+  async saveUserImage(userId: number, imageData: Partial<SavedImage>): Promise<SavedImage> {
+    const [savedImage] = await db
+      .insert(savedImages)
+      .values({
+        userId,
+        imageUrl: imageData.imageUrl!,
+        imageType: imageData.imageType!,
+        title: imageData.title,
+      })
+      .returning();
+    return savedImage;
   }
 }
 

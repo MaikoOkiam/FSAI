@@ -16,7 +16,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Fashion advisor chat endpoint
   app.post("/api/fashion/advice", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const user = req.user!;
     if (user.credits < 1) return res.status(402).json({ error: "Insufficient credits" });
 
@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Outfit analysis endpoint
   app.post("/api/fashion/analyze", upload.single("image"), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const user = req.user!;
     if (user.credits < 2) return res.status(402).json({ error: "Insufficient credits" });
 
@@ -51,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Style transfer endpoint
   app.post("/api/fashion/transfer", upload.single("image"), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const user = req.user!;
     if (user.credits < 3) return res.status(402).json({ error: "Insufficient credits" });
 
@@ -61,6 +61,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ url: styleUrl });
     } catch (error) {
       res.status(500).json({ error: "Failed to transfer style" });
+    }
+  });
+
+  // User preferences endpoint
+  app.patch("/api/user/preferences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      await storage.updateUserPreferences(req.user!.id, req.body);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update preferences" });
+    }
+  });
+
+  // User interests endpoint
+  app.patch("/api/user/interests", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      await storage.updateUserInterests(req.user!.id, req.body);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update interests" });
+    }
+  });
+
+  // Get saved images endpoint
+  app.get("/api/images/saved", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const images = await storage.getUserSavedImages(req.user!.id);
+      res.json(images);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch saved images" });
+    }
+  });
+
+  // Save image endpoint
+  app.post("/api/images/save", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const savedImage = await storage.saveUserImage(req.user!.id, req.body);
+      res.json(savedImage);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save image" });
     }
   });
 
