@@ -56,6 +56,28 @@ const occasions = [
   "Reise",
 ];
 
+const hairColors = [
+  "Schwarz",
+  "Dunkelbraun",
+  "Hellbraun",
+  "Blond",
+  "Rot",
+  "Grau",
+  "Weiß",
+  "Gefärbt"
+];
+
+const hairStyles = [
+  "Kurz",
+  "Mittellang",
+  "Lang",
+  "Locken",
+  "Glatt",
+  "Wellen",
+  "Glatze",
+  "Undercut"
+];
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -68,6 +90,9 @@ export default function ProfilePage() {
     resolver: zodResolver(userPreferencesSchema),
     defaultValues: {
       style: user?.preferences?.style || "",
+      age: user?.preferences?.age || undefined,
+      hairColor: user?.preferences?.hairColor || "",
+      hairStyle: user?.preferences?.hairStyle || "",
       notifications: {
         email: user?.preferences?.notifications?.email || false,
         styleUpdates: user?.preferences?.notifications?.styleUpdates || false,
@@ -136,32 +161,6 @@ export default function ProfilePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Benutzername</label>
-                  <p className="mt-1">{user?.username}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">E-Mail</label>
-                  <p className="mt-1">{user?.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Kontostand</label>
-                  <p className="mt-1">{user?.credits} Credits</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Benachrichtigungseinstellungen */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Benachrichtigungen</CardTitle>
-              <CardDescription>
-                Verwalten Sie Ihre Benachrichtigungseinstellungen
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
               <Form {...preferencesForm}>
                 <form
                   onSubmit={preferencesForm.handleSubmit((data) =>
@@ -169,6 +168,89 @@ export default function ProfilePage() {
                   )}
                   className="space-y-4"
                 >
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Benutzername</label>
+                      <p className="mt-1">{user?.username}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">E-Mail</label>
+                      <p className="mt-1">{user?.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Kontostand</label>
+                      <p className="mt-1">{user?.credits} Credits</p>
+                    </div>
+                  </div>
+                  <FormField
+                    control={preferencesForm.control}
+                    name="age"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Alter</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={13}
+                            max={120}
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={preferencesForm.control}
+                    name="hairColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Haarfarbe</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Wählen Sie Ihre Haarfarbe" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {hairColors.map((color) => (
+                              <SelectItem key={color} value={color}>
+                                {color}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={preferencesForm.control}
+                    name="hairStyle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Frisur</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Wählen Sie Ihre Frisur" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {hairStyles.map((style) => (
+                              <SelectItem key={style} value={style}>
+                                {style}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={preferencesForm.control}
                     name="notifications.email"
@@ -243,12 +325,12 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Modeinteressen */}
-          <Card className="md:col-span-2">
+          {/* Benachrichtigungseinstellungen */}
+          <Card>
             <CardHeader>
-              <CardTitle>Modeinteressen</CardTitle>
+              <CardTitle>Benachrichtigungen</CardTitle>
               <CardDescription>
-                Teilen Sie uns Ihre Modepräferenzen mit
+                Verwalten Sie Ihre Benachrichtigungseinstellungen
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -257,7 +339,7 @@ export default function ProfilePage() {
                   onSubmit={interestsForm.handleSubmit((data) =>
                     updateInterestsMutation.mutate(data)
                   )}
-                  className="space-y-6"
+                  className="space-y-4"
                 >
                   <FormField
                     control={interestsForm.control}

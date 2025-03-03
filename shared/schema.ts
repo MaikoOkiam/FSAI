@@ -49,6 +49,9 @@ export const loginSchema = insertUserSchema.omit({ email: true }).extend({
 // Schema für Benutzereinstellungen
 export const userPreferencesSchema = z.object({
   style: z.string(),
+  age: z.number().min(13, "Alter muss mindestens 13 Jahre sein").max(120, "Ungültiges Alter"),
+  hairColor: z.string(),
+  hairStyle: z.string(),
   notifications: z.object({
     email: z.boolean(),
     styleUpdates: z.boolean(),
