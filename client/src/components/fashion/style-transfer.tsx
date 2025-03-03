@@ -25,21 +25,26 @@ export default function StyleTransfer() {
         body: formData,
         credentials: "include",
       });
-      if (!response.ok) throw new Error("Failed to transfer style");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to transfer style");
+      }
       return response.json();
     },
     onSuccess: (data) => {
       toast({
-        title: "Success",
-        description: "Style transfer completed",
+        title: "Erfolg",
+        description: "Style Transfer abgeschlossen",
       });
+      console.log("Style transfer response:", data);
     },
     onError: (error) => {
       toast({
-        title: "Error",
+        title: "Fehler",
         description: error.message,
         variant: "destructive",
       });
+      console.error("Style transfer error:", error);
     },
   });
 
@@ -67,6 +72,11 @@ export default function StyleTransfer() {
     formData.append("sourceImage", sourceImage);
     formData.append("targetImage", targetImage);
     formData.append("prompt", prompt);
+    console.log("Submitting form data:", {
+      sourceImage: sourceImage.name,
+      targetImage: targetImage.name,
+      prompt,
+    });
     transferMutation.mutate(formData);
   };
 

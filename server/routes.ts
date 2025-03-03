@@ -50,6 +50,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required files or prompt" });
       }
 
+      console.log("Processing style transfer request:", {
+        sourceImageSize: sourceImage.size,
+        targetImageSize: targetImage.size,
+        prompt,
+      });
+
       const styleUrl = await generateStyleTransfer(
         sourceImage.buffer.toString("base64"),
         targetImage.buffer.toString("base64"),
