@@ -31,7 +31,7 @@ export async function generateStyleTransfer(
     slider_lighting: 2,
     slider_add_detail: 2,
     style_strength_ratio: 25,
-    image: `data:image/jpeg;base64,${sourceImageBase64}`,
+    face_image: `data:image/jpeg;base64,${sourceImageBase64}`,
     target_image: `data:image/jpeg;base64,${targetImageBase64}`
   };
 
