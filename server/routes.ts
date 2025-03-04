@@ -10,7 +10,7 @@ import { db } from "./db";
 import { waitlist } from "@shared/schema";
 import { sendWaitlistConfirmation } from "./email";
 import mailjet from "./mailjet";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -160,29 +160,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/waitlist/approve", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    // Check if user is an admin (you can add an admin field to the user schema later)
+    // Check if user is an admin
     const user = req.user!;
     if (!user.username.includes("admin")) return res.sendStatus(403);
 
     try {
       const { email } = req.body;
-      if (!email) return res.status(400).json({ error: "Email is required" });
+      if (!email) return res.status(400).json({ message: "Email is required" });
 
-      // Update waitlist entry status to approved
-      const [entry] = await db
-        .update(waitlist)
-        .set({ status: "approved" })
-        .where(waitlist.email.eq(email))
-        .returning();
+      console.log("[Admin Debug] Approving waitlist entry for email:", email);
 
-      if (!entry) {
-        return res.status(404).json({ error: "Email not found in waitlist" });
+      // First check if the entry exists and its current status
+      const [existingEntry] = await db
+        .select()
+        .from(waitlist)
+        .where(eq(waitlist.email, email))
+        .limit(1);
+
+      if (!existingEntry) {
+        console.log("[Admin Debug] No entry found for email:", email);
+        return res.status(404).json({ message: "Email not found in waitlist" });
       }
 
-      res.json({ success: true, entry });
+      console.log("[Admin Debug] Found existing entry:", existingEntry);
+
+      if (existingEntry.status === "approved") {
+        return res.json({
+          success: true,
+          entry: existingEntry,
+          message: "Entry was already approved"
+        });
+      }
+
+      // Update waitlist entry status to approved
+      const [updatedEntry] = await db
+        .update(waitlist)
+        .set({
+          status: "approved",
+        })
+        .where(eq(waitlist.email, email))
+        .returning();
+
+      if (!updatedEntry) {
+        console.error("[Admin Debug] Failed to update entry status");
+        return res.status(500).json({ message: "Failed to update waitlist status" });
+      }
+
+      console.log("[Admin Debug] Successfully approved entry:", updatedEntry);
+      res.json({ success: true, entry: updatedEntry });
     } catch (error) {
-      console.error('Waitlist approval error:', error);
-      res.status(500).json({ error: "Failed to approve waitlist member" });
+      console.error('[Admin Debug] Waitlist approval error:', error);
+      res.status(500).json({ message: "Failed to approve waitlist member" });
     }
   });
 
@@ -201,11 +229,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(waitlist)
         .orderBy(desc(waitlist.createdAt));
 
-      console.log("[Admin Debug] Found entries:", entries);
+      console.log("[Admin Debug] Found entries:", entries.length);
       res.json(entries);
     } catch (error) {
       console.error('Waitlist listing error:', error);
-      res.status(500).json({ error: "Failed to list waitlist entries" });
+      res.status(500).json({ message: "Failed to list waitlist entries" });
     }
   });
 

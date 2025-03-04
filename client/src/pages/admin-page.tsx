@@ -72,23 +72,28 @@ export default function AdminPage() {
 
   const approveMutation = useMutation({
     mutationFn: async (email: string) => {
+      console.log("[Admin Debug] Approving email:", email);
       const res = await fetch("/api/admin/waitlist/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+
+      const data = await res.json();
+
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to approve user");
+        throw new Error(data.message || "Failed to approve user");
       }
-      return res.json();
+
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Success",
-        description: "User has been approved",
+        description: data.message || "User has been approved successfully",
       });
-      refetch();
+      console.log("[Admin Debug] Approval successful:", data);
+      refetch(); // Refresh the waitlist data
     },
     onError: (error: Error) => {
       toast({
@@ -96,8 +101,14 @@ export default function AdminPage() {
         description: error.message,
         variant: "destructive",
       });
+      console.error("[AdminPage Error]", error);
     },
   });
+
+  const handleApprove = (email: string) => {
+    console.log("[Admin Debug] Handling approval for:", email);
+    approveMutation.mutate(email);
+  };
 
   function getStatusVariant(status: string): "default" | "secondary" | "outline" {
     switch (status) {
@@ -138,10 +149,6 @@ export default function AdminPage() {
       </div>
     );
   }
-
-  const handleApprove = (email: string) => {
-    approveMutation.mutate(email);
-  };
 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
