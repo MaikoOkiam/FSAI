@@ -6,6 +6,8 @@ import { getFashionAdvice, analyzeOutfit } from "./openai";
 import { generateStyleTransfer } from "./replicate";
 import multer from "multer";
 import { z } from "zod";
+import { db } from "./db";
+import { waitlist } from "@shared/schema";
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -26,6 +28,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .insert(waitlist)
         .values(data)
         .returning();
+
+      // Send confirmation email
+      await getFashionAdvice(`Compose a welcome email for ${data.name}:
+      - Thank them for joining Eva Harper's waitlist
+      - Let them know we'll review their application shortly
+      - Mention they'll receive access information via email
+      Include emoji and keep it friendly!`).then(async (emailContent) => {
+        console.log("Would send email to", data.email, "with content:", emailContent);
+        // Here we would integrate with a real email service
+      });
 
       res.status(201).json(entry);
     } catch (error) {
