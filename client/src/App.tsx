@@ -12,12 +12,14 @@ import Dashboard from "@/pages/dashboard";
 import ProfilePage from "@/pages/profile-page";
 import NotFound from "@/pages/not-found";
 import ImprintPage from "@/pages/imprint";
+import SetupPasswordPage from "@/pages/setup-password";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth/setup-password" component={SetupPasswordPage} />
       <Route path="/imprint" component={ImprintPage} />
       <ProtectedRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/dashboard" component={Dashboard} />
