@@ -131,10 +131,10 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <Card>
                 <CardContent className="pt-6">
-                  <MessageSquare className="h-12 w-12 text-primary mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Fashion Advisor</h3>
+                  <Star className="h-12 w-12 text-primary mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Outfit Rating</h3>
                   <p className="text-muted-foreground">
-                    Get personalized style advice from our AI fashion expert
+                    Get feedback on your outfits for any occasion
                   </p>
                 </CardContent>
               </Card>
@@ -146,6 +146,9 @@ export default function LandingPage() {
                   <p className="text-muted-foreground">
                     See how clothes look on you before buying
                   </p>
+                  <span className="inline-block mt-2 text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                    Coming Soon
+                  </span>
                 </CardContent>
               </Card>
 
@@ -156,16 +159,22 @@ export default function LandingPage() {
                   <p className="text-muted-foreground">
                     Transform your look with AI-powered style transfer
                   </p>
+                  <span className="inline-block mt-2 text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                    Coming Soon
+                  </span>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="pt-6">
-                  <Star className="h-12 w-12 text-primary mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Outfit Rating</h3>
+                  <MessageSquare className="h-12 w-12 text-primary mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Fashion Advisor</h3>
                   <p className="text-muted-foreground">
-                    Get feedback on your outfits for any occasion
+                    Get personalized style advice from our AI fashion expert
                   </p>
+                  <span className="inline-block mt-2 text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                    Coming Soon
+                  </span>
                 </CardContent>
               </Card>
             </div>
