@@ -22,6 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, registerSchema } from "@shared/schema";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -29,7 +31,13 @@ export default function AuthPage() {
 
   useEffect(() => {
     if (user) {
-      setLocation("/dashboard");
+      if (!user.hasAccess) {
+        // If user doesn't have access, redirect to waitlist
+        setLocation("/#waitlist-form");
+      } else {
+        // If user has access, redirect to dashboard
+        setLocation("/dashboard");
+      }
     }
   }, [user, setLocation]);
 
@@ -59,10 +67,16 @@ export default function AuthPage() {
             Ihr KI-gestützter Mode-Begleiter. Erhalten Sie personalisierte Stilberatung,
             virtuelle Anproben und mehr.
           </p>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Momentan ist der Zugang nur auf Einladung möglich. Bitte registrieren Sie sich auf der Warteliste.
+            </AlertDescription>
+          </Alert>
           <img
-            src="https://images.unsplash.com/photo-1485125639709-a60c3a500bf1"
+            src="/assets/eva-harper.webp"
             alt="Fashion"
-            className="rounded-lg object-cover aspect-video"
+            className="rounded-lg object-cover aspect-video mt-8"
           />
         </div>
 
@@ -122,66 +136,31 @@ export default function AuthPage() {
                       >
                         Anmelden
                       </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setLocation("/#waitlist-form")}
+                      >
+                        Zur Warteliste
+                      </Button>
                     </form>
                   </Form>
                 </TabsContent>
 
                 <TabsContent value="register">
-                  <Form {...registerForm}>
-                    <form
-                      onSubmit={registerForm.handleSubmit((data) =>
-                        registerMutation.mutate(data)
-                      )}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Benutzername</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>E-Mail</FormLabel>
-                            <FormControl>
-                              <Input type="email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Passwort</FormLabel>
-                            <FormControl>
-                              <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={registerMutation.isPending}
-                      >
-                        Konto erstellen
-                      </Button>
-                    </form>
-                  </Form>
+                  <Alert className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Die Registrierung ist momentan nur auf Einladung möglich. Bitte registrieren Sie sich auf der Warteliste.
+                    </AlertDescription>
+                  </Alert>
+                  <Button
+                    className="w-full"
+                    onClick={() => setLocation("/#waitlist-form")}
+                  >
+                    Zur Warteliste
+                  </Button>
                 </TabsContent>
               </Tabs>
             </CardContent>
