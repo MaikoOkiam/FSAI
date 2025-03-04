@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { NavBar } from "../components/layout/nav-bar";
-import { useToast } from "../components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
