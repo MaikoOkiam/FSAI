@@ -17,10 +17,13 @@ const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
   try {
+    console.log("[Auth Debug] Starting password hash generation");
     const salt = randomBytes(16).toString("hex");
-    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-    const hashedPassword = buf.toString("hex");
-    console.log("[Auth Debug] Generated hash format:", `${hashedPassword}.${salt}`);
+    const keyLength = 32; // Using 32 bytes (256 bits) for the key
+    const buffer = await scryptAsync(password, salt, keyLength) as Buffer;
+    const hashedPassword = buffer.toString("hex");
+    console.log("[Auth Debug] Generated hash length:", hashedPassword.length);
+    console.log("[Auth Debug] Salt length:", salt.length);
     return `${hashedPassword}.${salt}`;
   } catch (error) {
     console.error("[Auth Debug] Hash generation error:", error);
@@ -30,8 +33,7 @@ async function hashPassword(password: string) {
 
 async function comparePasswords(supplied: string, stored: string) {
   try {
-    console.log("[Auth Debug] Comparing passwords");
-    console.log("[Auth Debug] Stored password format:", stored);
+    console.log("[Auth Debug] Starting password comparison");
 
     const [hashedPassword, salt] = stored.split(".");
     if (!hashedPassword || !salt) {
@@ -39,12 +41,24 @@ async function comparePasswords(supplied: string, stored: string) {
       return false;
     }
 
-    const hashedBuf = Buffer.from(hashedPassword, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    console.log("[Auth Debug] Hash length:", hashedPassword.length);
+    console.log("[Auth Debug] Salt length:", salt.length);
 
-    const result = timingSafeEqual(hashedBuf, suppliedBuf);
-    console.log("[Auth Debug] Password comparison result:", result);
-    return result;
+    const keyLength = 32; // Must match the length used in hashPassword
+    const hashedBuf = Buffer.from(hashedPassword, "hex");
+    const suppliedBuf = await scryptAsync(supplied, salt, keyLength) as Buffer;
+
+    console.log("[Auth Debug] Comparing buffers of length:", hashedBuf.length);
+
+    if (hashedBuf.length !== suppliedBuf.length) {
+      console.error("[Auth Debug] Buffer length mismatch:", { 
+        hashedLength: hashedBuf.length, 
+        suppliedLength: suppliedBuf.length 
+      });
+      return false;
+    }
+
+    return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error("[Auth Debug] Password comparison error:", error);
     return false;
@@ -131,7 +145,7 @@ export function setupAuth(app: Express) {
         console.log("[Auth Debug] Username already exists");
         return res.status(400).json({ message: "Username already exists" });
       }
-      
+
       // Check if email is in the approved waitlist
       const waitlistEntry = await storage.getApprovedWaitlistEntry(req.body.email);
       if (!waitlistEntry) {
@@ -151,7 +165,7 @@ export function setupAuth(app: Express) {
 
       // Update waitlist entry to registered
       await storage.markWaitlistAsRegistered(req.body.email);
-      
+
       req.login(user, (err) => {
         if (err) return next(err);
         res.status(201).json(user);
