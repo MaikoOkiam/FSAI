@@ -16,17 +16,35 @@ declare global {
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  try {
+    const salt = randomBytes(16).toString("hex");
+    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+    const hashedPassword = buf.toString("hex");
+    console.log("[Auth Debug] Generated hash format:", `${hashedPassword}.${salt}`);
+    return `${hashedPassword}.${salt}`;
+  } catch (error) {
+    console.error("[Auth Debug] Hash generation error:", error);
+    throw error;
+  }
 }
 
 async function comparePasswords(supplied: string, stored: string) {
   try {
+    console.log("[Auth Debug] Comparing passwords");
+    console.log("[Auth Debug] Stored password format:", stored);
+
     const [hashedPassword, salt] = stored.split(".");
+    if (!hashedPassword || !salt) {
+      console.error("[Auth Debug] Invalid stored password format");
+      return false;
+    }
+
     const hashedBuf = Buffer.from(hashedPassword, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+
+    const result = timingSafeEqual(hashedBuf, suppliedBuf);
+    console.log("[Auth Debug] Password comparison result:", result);
+    return result;
   } catch (error) {
     console.error("[Auth Debug] Password comparison error:", error);
     return false;
