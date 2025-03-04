@@ -17,15 +17,20 @@ const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  const buf = (await scryptAsync(password, salt, 32)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    const [hashedPassword, salt] = stored.split(".");
+    const hashedBuf = Buffer.from(hashedPassword, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 32)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("[Auth Debug] Password comparison error:", error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -62,15 +67,20 @@ export function setupAuth(app: Express) {
           return done(null, false);
         }
 
-        const passwordValid = await comparePasswords(password, user.password);
-        console.log("[Auth Debug] Password valid:", passwordValid);
+        try {
+          const passwordValid = await comparePasswords(password, user.password);
+          console.log("[Auth Debug] Password valid:", passwordValid);
 
-        if (!passwordValid) {
-          return done(null, false);
+          if (!passwordValid) {
+            return done(null, false);
+          }
+
+          console.log("[Auth Debug] Login successful");
+          return done(null, user);
+        } catch (error) {
+          console.error("[Auth Debug] Password validation error:", error);
+          return done(error);
         }
-
-        console.log("[Auth Debug] Login successful");
-        return done(null, user);
       } catch (err) {
         console.error("[Auth Debug] Login error:", err);
         return done(err);
