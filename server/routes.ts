@@ -9,6 +9,7 @@ import { z } from "zod";
 import { db } from "./db";
 import { waitlist } from "@shared/schema";
 import { sendWaitlistConfirmation } from "./email";
+import mailjet from "./mailjet";
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -49,6 +50,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Waitlist signup error:', error);
         res.status(400).json({ error: "Registrierung fehlgeschlagen" });
       }
+    }
+  });
+
+  // Import waitlist to Mailjet list endpoint
+  app.post("/api/waitlist/import-to-mailjet", async (req, res) => {
+    try {
+      // Get all emails from waitlist
+      const entries = await db
+        .select({
+          email: waitlist.email,
+          name: waitlist.name
+        })
+        .from(waitlist);
+
+      if (entries.length === 0) {
+        return res.json({ success: true, imported: 0, message: "No entries to import" });
+      }
+
+      console.log("Found waitlist entries:", entries.length);
+
+      // Format contacts for Mailjet
+      const contacts = entries.map(entry => ({
+        Email: entry.email,
+        Name: entry.name,
+      }));
+
+      // Add contacts to Mailjet list
+      const contactManageList = await mailjet
+        .post("contact", { version: "v3" })
+        .id("lists")
+        .id(10519869) // The Mailjet list ID
+        .action("managecontacts")
+        .request({
+          Action: "addnoforce",
+          Contacts: contacts
+        });
+
+      console.log("Contacts imported to Mailjet:", contactManageList.body);
+      res.json({ success: true, imported: contacts.length });
+    } catch (error) {
+      console.error('Mailjet import error:', error);
+      res.status(500).json({ error: "Failed to import contacts to Mailjet" });
     }
   });
 
