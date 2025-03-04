@@ -41,7 +41,17 @@ export async function sendWaitlistConfirmation(email: string, content: string) {
 
 export async function sendPasswordSetupEmail(email: string, token: string) {
   try {
-    const setupUrl = `${process.env.APP_URL || 'http://localhost:5000'}/auth/setup-password?token=${token}`;
+    // Determine the correct base URL
+    let baseUrl = 'https://';
+    if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+      // We're on Replit
+      baseUrl += `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+    } else {
+      // Fallback to APP_URL or localhost
+      baseUrl = process.env.APP_URL || 'http://localhost:5000';
+    }
+
+    const setupUrl = `${baseUrl}/auth/setup-password?token=${token}`;
 
     const content = `
 Willkommen bei Eva Harper!
