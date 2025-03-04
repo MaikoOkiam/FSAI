@@ -10,6 +10,7 @@ import { db } from "./db";
 import { waitlist } from "@shared/schema";
 import { sendWaitlistConfirmation } from "./email";
 import mailjet from "./mailjet";
+import { desc } from "drizzle-orm";
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -198,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const entries = await db
         .select()
         .from(waitlist)
-        .orderBy(waitlist.createdAt.desc());
+        .orderBy(desc(waitlist.createdAt));
 
       console.log("[Admin Debug] Found entries:", entries);
       res.json(entries);
