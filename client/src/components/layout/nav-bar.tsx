@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User } from "lucide-react";
+import { Settings, User } from "lucide-react";
 
 export function NavBar() {
   const { user, logoutMutation } = useAuth();
@@ -77,6 +77,16 @@ export function NavBar() {
                           </div>
                         </Link>
                       </DropdownMenuItem>
+                      {user.username.includes("admin") && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin">
+                            <div className="flex items-center">
+                              <Settings className="mr-2 h-4 w-4" />
+                              <span>Admin Panel</span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => logoutMutation.mutate()}
