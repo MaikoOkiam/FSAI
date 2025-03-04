@@ -21,7 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Waitlist signup endpoint
   app.post("/api/waitlist", async (req, res) => {
     try {
-      const data = { 
+      const data = {
         email: req.body.email,
         name: req.body.email.split('@')[0], // Use part before @ as name
         reason: "" // Empty reason
@@ -77,15 +77,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       // Add contacts to Mailjet list
-      const contactManageList = await mailjet
-        .post("contact", { version: "v3" })
-        .id("lists")
-        .id(10519869) // The Mailjet list ID
-        .action("managecontacts")
-        .request({
-          Action: "addnoforce",
-          Contacts: contacts
-        });
+      const contactManageList = await mailjet.post("contactslist", { version: "v3.1" }).id("10519869").action("managecontacts").request({
+        Action: "addnoforce",
+        Contacts: contacts
+      });
 
       console.log("Contacts imported to Mailjet:", contactManageList.body);
       res.json({ success: true, imported: contacts.length });
