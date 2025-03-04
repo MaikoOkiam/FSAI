@@ -16,11 +16,22 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
+
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-20 px-4 text-center bg-gradient-to-b from-background to-muted">
-          <div className="container mx-auto max-w-4xl">
+        {/* Hero Section with Background Image */}
+        <section className="relative py-32 px-4 text-center">
+          {/* Hero Background */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src="/attached_assets/out-0.webp"
+              alt="Eva Harper AI Fashion"
+              className="w-full h-full object-cover opacity-15"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/95 to-background/70" />
+          </div>
+
+          {/* Hero Content */}
+          <div className="container mx-auto max-w-4xl relative z-10">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Your Personal AI Fashion Stylist
             </h1>
