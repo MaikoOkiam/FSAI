@@ -82,7 +82,7 @@ export default function LandingPage() {
             </p>
 
             {/* Waitlist Form */}
-            <Card className="max-w-md mx-auto">
+            <Card className="max-w-md mx-auto" id="waitlist-form">
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
@@ -170,8 +170,10 @@ export default function LandingPage() {
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-semibold mb-4">Free Trial</h3>
                   <p className="text-3xl font-bold mb-4">10 Credits</p>
-                  <Button className="w-full" asChild>
-                    <Link href="/auth">Get Started</Link>
+                  <Button className="w-full" onClick={() => {
+                    document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    Zugang beantragen
                   </Button>
                 </CardContent>
               </Card>
@@ -180,8 +182,10 @@ export default function LandingPage() {
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-semibold mb-4">Monthly</h3>
                   <p className="text-3xl font-bold mb-4">$19.99</p>
-                  <Button className="w-full" asChild>
-                    <Link href="/auth">Subscribe</Link>
+                  <Button className="w-full" onClick={() => {
+                    document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    Zugang beantragen
                   </Button>
                 </CardContent>
               </Card>
@@ -190,8 +194,10 @@ export default function LandingPage() {
                 <CardContent className="pt-6">
                   <h3 className="text-xl font-semibold mb-4">Yearly</h3>
                   <p className="text-3xl font-bold mb-4">$199.99</p>
-                  <Button className="w-full" asChild>
-                    <Link href="/auth">Subscribe</Link>
+                  <Button className="w-full" onClick={() => {
+                    document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    Zugang beantragen
                   </Button>
                 </CardContent>
               </Card>
