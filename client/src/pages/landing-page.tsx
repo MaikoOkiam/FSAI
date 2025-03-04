@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/layout/nav-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
-import { 
-  MessageSquare, 
-  Shirt, 
+import {
+  MessageSquare,
+  Shirt,
   Sparkles,
   Star
 } from "lucide-react";
@@ -35,20 +35,28 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Eva Image Section */}
-        <section className="py-16 px-4">
-          <div className="container mx-auto max-w-2xl">
-            <img
-              src="/attached_assets/out-0.webp"
-              alt="Eva Harper - Your AI Fashion Assistant"
-              className="w-full h-auto rounded-lg shadow-xl"
-            />
-          </div>
-        </section>
 
         {/* Features Section */}
         <section className="py-20 px-4">
           <div className="container mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+              <div>
+                <h2 className="text-3xl font-bold mb-6">
+                  Meet Eva Harper
+                </h2>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Your dedicated AI fashion expert, available 24/7 to help you create your perfect style and make confident fashion choices.
+                </p>
+              </div>
+              <div className="order-first md:order-last">
+                <img
+                  src="/attached_assets/out-0.webp"
+                  alt="Eva Harper - Your AI Fashion Assistant"
+                  className="w-full rounded-lg shadow-xl"
+                />
+              </div>
+            </div>
+
             <h2 className="text-3xl font-bold text-center mb-12">
               AI-Powered Fashion Features
             </h2>
