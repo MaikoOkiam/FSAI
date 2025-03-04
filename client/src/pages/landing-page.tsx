@@ -227,8 +227,13 @@ export default function LandingPage() {
       </main>
 
       <footer className="py-8 px-4 border-t">
-        <div className="container mx-auto text-center text-muted-foreground">
-          © 2024 Eva Harper. All rights reserved.
+        <div className="container mx-auto flex justify-between items-center text-muted-foreground">
+          <div>© 2024 Eva Harper. All rights reserved.</div>
+          <div className="flex gap-4">
+            <Link href="/imprint">
+              <a className="hover:text-primary">Imprint</a>
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
