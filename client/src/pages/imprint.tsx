@@ -1,8 +1,10 @@
 import { Link } from "wouter";
+import { NavBar } from "@/components/layout/nav-bar";
 
 export default function ImprintPage() {
   return (
     <div className="min-h-screen bg-background">
+      <NavBar />
       <main className="container mx-auto px-4 py-12">
         <Link href="/">
           <a className="logo text-2xl text-primary mb-8 inline-block">Eva Harper</a>
