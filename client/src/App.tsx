@@ -7,6 +7,9 @@ import { ProtectedRoute } from "./lib/protected-route";
 
 import LandingPage from "@/pages/landing-page";
 import AuthPage from "@/pages/auth-page";
+
+          <Route path="/admin" component={AdminPage} />
+
 import Dashboard from "@/pages/dashboard";
 import ProfilePage from "@/pages/profile-page";
 import NotFound from "@/pages/not-found";

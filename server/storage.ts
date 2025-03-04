@@ -1,3 +1,122 @@
+
+import { db } from "./db";
+import { users, waitlist, savedImages, outfits, ratings } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import type { SessionData, Store } from "express-session";
+import pgSessionStore from "connect-pg-simple";
+
+// Create session store
+export const sessionStore = new (pgSessionStore(require("express-session")))({
+  conObject: { connectionString: process.env.DATABASE_URL },
+  tableName: "session",
+  createTableIfMissing: true,
+});
+
+export const storage = {
+  // User methods
+  async createUser(userData: any) {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  },
+  
+  async getUser(id: number) {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  },
+  
+  async getUserByUsername(username: string) {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  },
+  
+  async updateUserCredits(userId: number, credits: number) {
+    await db.update(users).set({ credits }).where(eq(users.id, userId));
+  },
+  
+  async updateUserPreferences(userId: number, preferences: any) {
+    await db.update(users).set({ preferences }).where(eq(users.id, userId));
+  },
+  
+  async updateUserInterests(userId: number, interests: any) {
+    await db.update(users).set({ interests }).where(eq(users.id, userId));
+  },
+  
+  async updateUserSubscription(userId: number, subscription: string, subscriptionEnds: string) {
+    await db.update(users)
+      .set({ subscription, subscriptionEnds })
+      .where(eq(users.id, userId));
+  },
+  
+  // Waitlist methods
+  async getApprovedWaitlistEntry(email: string) {
+    const [entry] = await db
+      .select()
+      .from(waitlist)
+      .where(eq(waitlist.email, email))
+      .where(eq(waitlist.status, "approved"));
+    return entry;
+  },
+  
+  async markWaitlistAsRegistered(email: string) {
+    await db
+      .update(waitlist)
+      .set({ status: "registered" })
+      .where(eq(waitlist.email, email));
+  },
+  
+  // Image methods
+  async saveUserImage(userId: number, imageData: any) {
+    const [image] = await db
+      .insert(savedImages)
+      .values({ ...imageData, userId })
+      .returning();
+    return image;
+  },
+  
+  async getUserSavedImages(userId: number) {
+    return db
+      .select()
+      .from(savedImages)
+      .where(eq(savedImages.userId, userId))
+      .orderBy(savedImages.createdAt.desc());
+  },
+  
+  // Outfit methods
+  async createOutfit(outfitData: any) {
+    const [outfit] = await db.insert(outfits).values(outfitData).returning();
+    return outfit;
+  },
+  
+  async getUserOutfits(userId: number) {
+    return db
+      .select()
+      .from(outfits)
+      .where(eq(outfits.userId, userId))
+      .orderBy(outfits.createdAt.desc());
+  },
+  
+  async getOutfit(id: number) {
+    const [outfit] = await db.select().from(outfits).where(eq(outfits.id, id));
+    return outfit;
+  },
+  
+  // Rating methods
+  async createRating(ratingData: any) {
+    const [rating] = await db.insert(ratings).values(ratingData).returning();
+    return rating;
+  },
+  
+  async getOutfitRating(outfitId: number) {
+    const [rating] = await db
+      .select()
+      .from(ratings)
+      .where(eq(ratings.outfitId, outfitId));
+    return rating;
+  },
+  
+  sessionStore,
+};
+
 import { users, savedImages, outfits, ratings, type User, type InsertUser, type SavedImage, type Outfit, type Rating, type InsertOutfit, type InsertRating } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";

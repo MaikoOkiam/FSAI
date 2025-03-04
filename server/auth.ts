@@ -131,6 +131,13 @@ export function setupAuth(app: Express) {
         console.log("[Auth Debug] Username already exists");
         return res.status(400).json({ message: "Username already exists" });
       }
+      
+      // Check if email is in the approved waitlist
+      const waitlistEntry = await storage.getApprovedWaitlistEntry(req.body.email);
+      if (!waitlistEntry) {
+        console.log("[Auth Debug] Email not in approved waitlist:", req.body.email);
+        return res.status(403).json({ message: "Registration requires waitlist approval" });
+      }
 
       const hashedPassword = await hashPassword(req.body.password);
       console.log("[Auth Debug] Password hashed successfully");
@@ -138,9 +145,13 @@ export function setupAuth(app: Express) {
       const user = await storage.createUser({
         ...req.body,
         password: hashedPassword,
+        hasAccess: true, // Automatically grant access for approved waitlist members
       });
       console.log("[Auth Debug] User created successfully");
 
+      // Update waitlist entry to registered
+      await storage.markWaitlistAsRegistered(req.body.email);
+      
       req.login(user, (err) => {
         if (err) return next(err);
         res.status(201).json(user);

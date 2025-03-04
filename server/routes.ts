@@ -118,6 +118,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  // Admin endpoint to approve waitlist members
+  app.post("/api/admin/waitlist/approve", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    // Check if user is an admin (you can add an admin field to the user schema later)
+    const user = req.user!;
+    if (!user.username.includes("admin")) return res.sendStatus(403);
+    
+    try {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ error: "Email is required" });
+      
+      // Update waitlist entry status to approved
+      const [entry] = await db
+        .update(waitlist)
+        .set({ status: "approved" })
+        .where(waitlist.email.eq(email))
+        .returning();
+      
+      if (!entry) {
+        return res.status(404).json({ error: "Email not found in waitlist" });
+      }
+      
+      res.json({ success: true, entry });
+    } catch (error) {
+      console.error('Waitlist approval error:', error);
+      res.status(500).json({ error: "Failed to approve waitlist member" });
+    }
+  });
+  
+  // Admin endpoint to list all waitlist entries
+  app.get("/api/admin/waitlist", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    // Check if user is an admin
+    const user = req.user!;
+    if (!user.username.includes("admin")) return res.sendStatus(403);
+    
+    try {
+      const entries = await db
+        .select()
+        .from(waitlist)
+        .orderBy(waitlist.createdAt.desc());
+      
+      res.json(entries);
+    } catch (error) {
+      console.error('Waitlist listing error:', error);
+      res.status(500).json({ error: "Failed to list waitlist entries" });
+    }
+  });
+
       const sourceImage = files.sourceImage[0];
       const targetImage = files.targetImage[0];
       const prompt = req.body.prompt;
