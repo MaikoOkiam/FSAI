@@ -14,6 +14,26 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
+  // Waitlist signup endpoint
+  app.post("/api/waitlist", async (req, res) => {
+    try {
+      const data = insertWaitlistSchema.parse(req.body);
+      const [entry] = await db
+        .insert(waitlist)
+        .values(data)
+        .returning();
+
+      res.status(201).json(entry);
+    } catch (error) {
+      if (error.code === '23505') { // Unique violation
+        res.status(400).json({ error: "Diese E-Mail-Adresse ist bereits registriert" });
+      } else {
+        console.error('Waitlist signup error:', error);
+        res.status(400).json({ error: "Registrierung fehlgeschlagen" });
+      }
+    }
+  });
+
   // Fashion advisor chat endpoint
   app.post("/api/fashion/advice", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

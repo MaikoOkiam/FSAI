@@ -1,17 +1,63 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/layout/nav-bar";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 import {
   MessageSquare,
   Shirt,
   Sparkles,
-  Star
+  Star,
+  Loader2
 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LandingPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [reason, setReason] = useState("");
+
+  const waitlistMutation = useMutation({
+    mutationFn: async (data: { email: string; name: string; reason: string }) => {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Registrierung fehlgeschlagen");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Erfolgreich registriert",
+        description: "Wir werden Sie benachrichtigen, sobald Ihr Zugang freigeschaltet wird.",
+      });
+      setEmail("");
+      setName("");
+      setReason("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    waitlistMutation.mutate({ email, name, reason });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -35,14 +81,53 @@ export default function LandingPage() {
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Your Personal AI Fashion Stylist
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8">
-              Let Eva Harper's AI-powered fashion platform help you discover and perfect your personal style
+            <p className="text-lg md:text-xl text-muted-foreground mb-12">
+              Let Eva Harper's AI-powered fashion platform help you discover and perfect your personal style. 
+              Join our exclusive waitlist for early access.
             </p>
-            <Button asChild size="lg" className="text-lg">
-              <Link href={user ? "/dashboard" : "/auth"}>
-                Get Started
-              </Link>
-            </Button>
+
+            {/* Waitlist Form */}
+            <Card className="max-w-md mx-auto">
+              <CardContent className="pt-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Input
+                      type="text"
+                      placeholder="Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      type="email"
+                      placeholder="E-Mail"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Textarea
+                      placeholder="Warum möchten Sie Eva Harper nutzen? (optional)"
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={waitlistMutation.isPending}
+                  >
+                    {waitlistMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    Für Zugang registrieren
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
