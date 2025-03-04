@@ -19,12 +19,11 @@ async function hashPassword(password: string) {
   try {
     console.log("[Auth Debug] Starting password hash generation");
     const salt = randomBytes(16).toString("hex");
-    const keyLength = 32; // Using 32 bytes (256 bits) for the key
-    const buffer = await scryptAsync(password, salt, keyLength) as Buffer;
-    const hashedPassword = buffer.toString("hex");
-    console.log("[Auth Debug] Generated hash length:", hashedPassword.length);
-    console.log("[Auth Debug] Salt length:", salt.length);
-    return `${hashedPassword}.${salt}`;
+    const derivedKey = (await scryptAsync(password, salt, 32)) as Buffer;
+    const hashedPassword = derivedKey.toString("hex");
+    const finalHash = `${hashedPassword}.${salt}`;
+    console.log("[Auth Debug] Hash generated successfully");
+    return finalHash;
   } catch (error) {
     console.error("[Auth Debug] Hash generation error:", error);
     throw error;
@@ -34,31 +33,17 @@ async function hashPassword(password: string) {
 async function comparePasswords(supplied: string, stored: string) {
   try {
     console.log("[Auth Debug] Starting password comparison");
+    const [hash, salt] = stored.split(".");
 
-    const [hashedPassword, salt] = stored.split(".");
-    if (!hashedPassword || !salt) {
+    if (!hash || !salt) {
       console.error("[Auth Debug] Invalid stored password format");
       return false;
     }
 
-    console.log("[Auth Debug] Hash length:", hashedPassword.length);
-    console.log("[Auth Debug] Salt length:", salt.length);
+    const suppliedHash = (await scryptAsync(supplied, salt, 32)) as Buffer;
+    const storedHash = Buffer.from(hash, "hex");
 
-    const keyLength = 32; // Must match the length used in hashPassword
-    const hashedBuf = Buffer.from(hashedPassword, "hex");
-    const suppliedBuf = await scryptAsync(supplied, salt, keyLength) as Buffer;
-
-    console.log("[Auth Debug] Comparing buffers of length:", hashedBuf.length);
-
-    if (hashedBuf.length !== suppliedBuf.length) {
-      console.error("[Auth Debug] Buffer length mismatch:", { 
-        hashedLength: hashedBuf.length, 
-        suppliedLength: suppliedBuf.length 
-      });
-      return false;
-    }
-
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    return timingSafeEqual(suppliedHash, storedHash);
   } catch (error) {
     console.error("[Auth Debug] Password comparison error:", error);
     return false;
@@ -90,50 +75,39 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        console.log("[Auth Debug] Attempting login for username:", username);
+        console.log("[Auth Debug] Login attempt for username:", username);
         const user = await storage.getUserByUsername(username);
-        console.log("[Auth Debug] Found user:", user ? "yes" : "no");
 
         if (!user) {
           console.log("[Auth Debug] User not found");
           return done(null, false, { message: "Invalid username or password" });
         }
 
-        try {
-          const passwordValid = await comparePasswords(password, user.password);
-          console.log("[Auth Debug] Password valid:", passwordValid);
+        const isValid = await comparePasswords(password, user.password);
+        console.log("[Auth Debug] Password validation result:", isValid);
 
-          if (!passwordValid) {
-            return done(null, false, { message: "Invalid username or password" });
-          }
-
-          console.log("[Auth Debug] Login successful");
-          return done(null, user);
-        } catch (error) {
-          console.error("[Auth Debug] Password validation error:", error);
-          return done(error);
+        if (!isValid) {
+          return done(null, false, { message: "Invalid username or password" });
         }
-      } catch (err) {
-        console.error("[Auth Debug] Login error:", err);
-        return done(err);
+
+        return done(null, user);
+      } catch (error) {
+        console.error("[Auth Debug] Login error:", error);
+        return done(error);
       }
     }),
   );
 
   passport.serializeUser((user, done) => {
-    console.log("[Auth Debug] Serializing user:", user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
-      console.log("[Auth Debug] Deserializing user:", id);
       const user = await storage.getUser(id);
-      console.log("[Auth Debug] Deserialized user found:", user ? "yes" : "no");
       done(null, user);
-    } catch (err) {
-      console.error("[Auth Debug] Deserialization error:", err);
-      done(err);
+    } catch (error) {
+      done(error);
     }
   });
 
@@ -198,13 +172,8 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res, next) => {
-    console.log("[Auth Debug] Logout attempt");
     req.logout((err) => {
-      if (err) {
-        console.error("[Auth Debug] Logout error:", err);
-        return next(err);
-      }
-      console.log("[Auth Debug] Logout successful");
+      if (err) return next(err);
       res.sendStatus(200);
     });
   });
