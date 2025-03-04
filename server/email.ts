@@ -41,15 +41,15 @@ export async function sendWaitlistConfirmation(email: string, content: string) {
 
 export async function sendPasswordSetupEmail(email: string, token: string) {
   try {
-    // Determine the correct base URL
-    let baseUrl = 'https://';
-    if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
-      // We're on Replit
-      baseUrl += `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
-    } else {
-      // Fallback to APP_URL or localhost
-      baseUrl = process.env.APP_URL || 'http://localhost:5000';
-    }
+    // Determine the correct base URL based on environment
+    const baseUrl = process.env.NODE_ENV === 'production' ? 
+                   `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : // Use Replit URL
+                   'http://localhost:5000';
+
+    console.log('Current environment:', process.env.NODE_ENV);
+    console.log('Repl Slug:', process.env.REPL_SLUG);
+    console.log('Repl Owner:', process.env.REPL_OWNER);
+    console.log('Using base URL for password setup:', baseUrl);
 
     const setupUrl = `${baseUrl}/auth/setup-password?token=${token}`;
 

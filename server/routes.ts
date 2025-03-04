@@ -1,5 +1,17 @@
+if (process.env.REPLIT_DEPLOYMENT_URL) {
+  process.env.NODE_ENV = 'production';
+}
+
+console.log('Environment Setup:', {
+  NODE_ENV: process.env.NODE_ENV,
+  REPL_SLUG: process.env.REPL_SLUG,
+  REPL_OWNER: process.env.REPL_OWNER,
+  REPLIT_DEPLOYMENT_URL: process.env.REPLIT_DEPLOYMENT_URL
+});
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { getFashionAdvice, analyzeOutfit } from "./openai";
@@ -18,6 +30,10 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Log environment information
+  console.log('Current environment:', process.env.NODE_ENV);
+  console.log('Deployment URL:', process.env.REPLIT_DEPLOYMENT_URL);
+
   setupAuth(app);
 
   // Waitlist signup endpoint
