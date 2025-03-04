@@ -391,8 +391,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Add these new routes inside the registerRoutes function, before httpServer creation
-
   // Profile image upload endpoint
   app.post("/api/profile/upload-image", upload.single("image"), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -428,6 +426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({
           preferences,
           interests,
+          hasCompletedOnboarding: true // Added to handle onboarding completion
         })
         .where(eq(users.id, req.user!.id))
         .returning();
@@ -436,6 +435,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to save preferences:", error);
       res.status(500).json({ error: "Failed to save preferences" });
+    }
+  });
+
+  app.post("/api/profile/complete-onboarding", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          hasCompletedOnboarding: true,
+        })
+        .where(eq(users.id, req.user!.id))
+        .returning();
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Failed to complete onboarding:", error);
+      res.status(500).json({ error: "Failed to complete onboarding" });
+    }
+  });
+
+  app.post("/api/profile/skip-onboarding", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          hasCompletedOnboarding: true,
+        })
+        .where(eq(users.id, req.user!.id))
+        .returning();
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Failed to skip onboarding:", error);
+      res.status(500).json({ error: "Failed to skip onboarding" });
     }
   });
 

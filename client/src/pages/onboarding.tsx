@@ -53,6 +53,26 @@ export default function OnboardingPage() {
     },
   });
 
+  const handleSkip = async () => {
+    try {
+      await fetch("/api/profile/skip-onboarding", {
+        method: "POST",
+        credentials: "include",
+      });
+      toast({
+        title: "Onboarding übersprungen",
+        description: "Sie können das Onboarding später in Ihrem Profil vervollständigen.",
+      });
+      setLocation("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Konnte das Onboarding nicht überspringen.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: "portrait" | "fullBody"
@@ -113,6 +133,12 @@ export default function OnboardingPage() {
       await savePreferencesMutation.mutateAsync({
         preferences: form.getValues(),
         interests: interestsForm.getValues(),
+      });
+
+      // Mark onboarding as completed
+      await fetch("/api/profile/complete-onboarding", {
+        method: "POST",
+        credentials: "include",
       });
 
       toast({
@@ -227,7 +253,7 @@ export default function OnboardingPage() {
                     <Label>Modestil-Präferenzen</Label>
                     <Input
                       placeholder="z.B. Casual, Business, Elegant"
-                      {...interestsForm.register("fashionStyles.0")}
+                      {...interestsForm.register("fashionStyles")}
                     />
                   </div>
 
@@ -235,7 +261,7 @@ export default function OnboardingPage() {
                     <Label>Lieblingsfarben</Label>
                     <Input
                       placeholder="z.B. Schwarz, Blau, Rot"
-                      {...interestsForm.register("favoriteColors.0")}
+                      {...interestsForm.register("favoriteColors")}
                     />
                   </div>
 
@@ -243,25 +269,34 @@ export default function OnboardingPage() {
                     <Label>Anlässe</Label>
                     <Input
                       placeholder="z.B. Büro, Freizeit, Party"
-                      {...interestsForm.register("occasions.0")}
+                      {...interestsForm.register("occasions")}
                     />
                   </div>
                 </div>
 
-                <Button
-                  onClick={completeOnboarding}
-                  className="w-full"
-                  disabled={
-                    uploadImageMutation.isPending ||
-                    savePreferencesMutation.isPending
-                  }
-                >
-                  {(uploadImageMutation.isPending ||
-                    savePreferencesMutation.isPending) && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Profil fertigstellen
-                </Button>
+                <div className="flex space-x-4">
+                  <Button
+                    onClick={completeOnboarding}
+                    className="flex-1"
+                    disabled={
+                      uploadImageMutation.isPending ||
+                      savePreferencesMutation.isPending
+                    }
+                  >
+                    {(uploadImageMutation.isPending ||
+                      savePreferencesMutation.isPending) && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Profil fertigstellen
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleSkip}
+                    className="flex-1"
+                  >
+                    Überspringen
+                  </Button>
+                </div>
               </form>
             </TabsContent>
           </Tabs>

@@ -16,6 +16,7 @@ export const users = pgTable("users", {
   interests: jsonb("interests").default({}).notNull(),
   preferences: jsonb("preferences").default({}).notNull(),
   hasAccess: boolean("has_access").default(false).notNull(),
+  hasCompletedOnboarding: boolean("has_completed_onboarding").default(false).notNull(),
 });
 
 export const waitlist = pgTable("waitlist", {
