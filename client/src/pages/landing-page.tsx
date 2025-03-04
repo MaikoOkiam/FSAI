@@ -18,6 +18,17 @@ export default function LandingPage() {
       <NavBar />
 
       <main className="flex-1">
+        {/* Eva Image Section */}
+        <section className="py-8 px-4">
+          <div className="container mx-auto max-w-lg">
+            <img
+              src="/assets/eva-harper.webp"
+              alt="Eva Harper - Your AI Fashion Assistant"
+              className="w-full rounded-lg shadow-xl"
+            />
+          </div>
+        </section>
+
         {/* Hero Section */}
         <section className="py-20 px-4 text-center bg-gradient-to-b from-background to-muted">
           <div className="container mx-auto max-w-4xl">
@@ -35,28 +46,9 @@ export default function LandingPage() {
           </div>
         </section>
 
-
         {/* Features Section */}
         <section className="py-20 px-4">
           <div className="container mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-              <div>
-                <h2 className="text-3xl font-bold mb-6">
-                  Meet Eva Harper
-                </h2>
-                <p className="text-lg text-muted-foreground mb-6">
-                  Your dedicated AI fashion expert, available 24/7 to help you create your perfect style and make confident fashion choices.
-                </p>
-              </div>
-              <div className="order-first md:order-last">
-                <img
-                  src="/assets/eva-harper.webp"
-                  alt="Eva Harper - Your AI Fashion Assistant"
-                  className="w-full rounded-lg shadow-xl"
-                />
-              </div>
-            </div>
-
             <h2 className="text-3xl font-bold text-center mb-12">
               AI-Powered Fashion Features
             </h2>
