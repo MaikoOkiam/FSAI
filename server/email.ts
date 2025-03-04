@@ -11,6 +11,7 @@ const mailjet = new Mailjet({
 
 export async function sendWaitlistConfirmation(email: string, content: string) {
   try {
+    console.log("Sending email via Mailjet to:", email);
     const result = await mailjet.post("send", { version: "v3.1" }).request({
       Messages: [
         {

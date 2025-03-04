@@ -36,6 +36,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       - Wir prüfen die Anfrage und melden uns bald
       - Der Zugang wird per E-Mail mitgeteilt
       Nutze Emojis und halte es freundlich!`).then(async (emailContent) => {
+        console.log("Attempting to send email to:", data.email);
+        console.log("Email content:", emailContent);
         await sendWaitlistConfirmation(data.email, emailContent);
       });
 
