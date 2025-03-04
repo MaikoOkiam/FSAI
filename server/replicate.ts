@@ -1,18 +1,24 @@
 import Replicate from "replicate";
 
-if (!process.env.REPLICATE_API_TOKEN) {
-  throw new Error("REPLICATE_API_TOKEN environment variable is required");
-}
+// Make Replicate client optional based on available environment variable
+let replicate: Replicate | null = null;
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
+if (process.env.REPLICATE_API_TOKEN) {
+  replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+  });
+} else {
+  console.warn("REPLICATE_API_TOKEN not set. Image generation features will be disabled.");
+}
 
 export async function generateStyleTransfer(
   sourceImageBase64: string,
   targetImageBase64: string,
   customPrompt: string
 ): Promise<string> {
+  if (!replicate) {
+    throw new Error("Replicate API is not configured. Image generation is unavailable.");
+  }
   const input = {
     width: 768,
     gender: "male",
