@@ -62,7 +62,7 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted p-4">
       <div className="w-full max-w-[1200px] grid md:grid-cols-2 gap-8">
         {/* Info Section - Now visible on both mobile and desktop */}
-        <div className="flex flex-col justify-center order-2 md:order-1">
+        <div className="flex flex-col justify-center order-1 md:order-1">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">Willkommen bei Eva Harper</h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8">
             Ihr KI-gestützter Mode-Begleiter. Erhalten Sie personalisierte Stilberatung,
@@ -82,7 +82,7 @@ export default function AuthPage() {
         </div>
 
         {/* Auth Form Section */}
-        <div className="order-1 md:order-2">
+        <div className="order-2 md:order-2">
           <Card className="w-full">
             <CardHeader>
               <CardTitle>Anmelden oder Registrieren</CardTitle>
