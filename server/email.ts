@@ -16,7 +16,7 @@ export async function sendWaitlistConfirmation(email: string, content: string) {
       Messages: [
         {
           From: {
-            Email: "noreply@eva-harper.ai",
+            Email: "maiko.okiam111@gmail.com",
             Name: "Eva Harper"
           },
           To: [
