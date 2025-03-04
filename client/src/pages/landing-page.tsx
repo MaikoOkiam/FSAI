@@ -113,7 +113,7 @@ export default function LandingPage() {
                     {waitlistMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : null}
-                    Zugang beantragen
+                    Request Access
                   </Button>
                 </form>
               </CardContent>
@@ -193,7 +193,7 @@ export default function LandingPage() {
                   <Button className="w-full" onClick={() => {
                     document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
                   }}>
-                    Zugang beantragen
+                    Request Access
                   </Button>
                 </CardContent>
               </Card>
@@ -205,7 +205,7 @@ export default function LandingPage() {
                   <Button className="w-full" onClick={() => {
                     document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
                   }}>
-                    Zugang beantragen
+                    Request Access
                   </Button>
                 </CardContent>
               </Card>
@@ -217,7 +217,7 @@ export default function LandingPage() {
                   <Button className="w-full" onClick={() => {
                     document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' });
                   }}>
-                    Zugang beantragen
+                    Request Access
                   </Button>
                 </CardContent>
               </Card>
