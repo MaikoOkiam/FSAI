@@ -17,7 +17,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Waitlist signup endpoint
   app.post("/api/waitlist", async (req, res) => {
     try {
-      const data = insertWaitlistSchema.parse(req.body);
+      const data = { 
+        email: req.body.email,
+        name: req.body.email.split('@')[0], // Use part before @ as name
+        reason: "" // Empty reason
+      };
       const [entry] = await db
         .insert(waitlist)
         .values(data)

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/layout/nav-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -20,15 +19,13 @@ export default function LandingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [reason, setReason] = useState("");
 
   const waitlistMutation = useMutation({
-    mutationFn: async (data: { email: string; name: string; reason: string }) => {
+    mutationFn: async (email: string) => {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ email }),
       });
       if (!res.ok) {
         const error = await res.json();
@@ -42,8 +39,6 @@ export default function LandingPage() {
         description: "Wir werden Sie benachrichtigen, sobald Ihr Zugang freigeschaltet wird.",
       });
       setEmail("");
-      setName("");
-      setReason("");
     },
     onError: (error: Error) => {
       toast({
@@ -56,7 +51,7 @@ export default function LandingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    waitlistMutation.mutate({ email, name, reason });
+    waitlistMutation.mutate(email);
   };
 
   return (
@@ -92,27 +87,11 @@ export default function LandingPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <Input
-                      type="text"
-                      placeholder="Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Input
                       type="email"
                       placeholder="E-Mail"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                    />
-                  </div>
-                  <div>
-                    <Textarea
-                      placeholder="Warum möchten Sie Eva Harper nutzen? (optional)"
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
                     />
                   </div>
                   <Button 
@@ -123,7 +102,7 @@ export default function LandingPage() {
                     {waitlistMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : null}
-                    Für Zugang registrieren
+                    Zugang beantragen
                   </Button>
                 </form>
               </CardContent>
