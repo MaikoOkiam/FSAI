@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -21,17 +22,53 @@ export const waitlist = pgTable("waitlist", {
   name: text("name").notNull(),
   reason: text("reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  status: text("status").default("pending").notNull(), // pending, approved, rejected
+  status: text("status").default("pending").notNull(),
 });
 
 export const savedImages = pgTable("saved_images", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   imageUrl: text("image_url").notNull(),
-  imageType: text("image_type").notNull(), // 'generated' oder 'uploaded'
+  imageType: text("image_type").notNull(),
   title: text("title"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const outfits = pgTable("outfits", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  imageUrl: text("image_url").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  occasion: text("occasion"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const ratings = pgTable("ratings", {
+  id: serial("id").primaryKey(),
+  outfitId: integer("outfit_id").notNull(),
+  styleScore: integer("style_score").notNull(),
+  fitScore: integer("fit_score").notNull(),
+  colorScore: integer("color_score").notNull(),
+  feedback: text("feedback").notNull(),
+  suggestions: jsonb("suggestions").default([]).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const outfitsRelations = relations(outfits, ({ one, many }) => ({
+  user: one(users, {
+    fields: [outfits.userId],
+    references: [users.id],
+  }),
+  ratings: many(ratings),
+}));
+
+export const ratingsRelations = relations(ratings, ({ one }) => ({
+  outfit: one(outfits, {
+    fields: [ratings.outfitId],
+    references: [outfits.id],
+  }),
+}));
 
 export const insertWaitlistSchema = createInsertSchema(waitlist).pick({
   email: true,
@@ -53,19 +90,19 @@ export type User = typeof users.$inferSelect;
 export type SavedImage = typeof savedImages.$inferSelect;
 
 export const registerSchema = insertUserSchema.extend({
-  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen lang sein"),
-  email: z.string().email("Ungültige E-Mail-Adresse"),
-  password: z.string().min(6, "Passwort muss mindestens 6 Zeichen lang sein"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const loginSchema = insertUserSchema.omit({ email: true }).extend({
-  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen lang sein"),
-  password: z.string().min(6, "Passwort muss mindestens 6 Zeichen lang sein"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const userPreferencesSchema = z.object({
   style: z.string(),
-  age: z.number().min(13, "Alter muss mindestens 13 Jahre sein").max(120, "Ungültiges Alter"),
+  age: z.number().min(13, "Age must be at least 13").max(120, "Invalid age"),
   hairColor: z.string(),
   hairStyle: z.string(),
   notifications: z.object({
@@ -80,3 +117,25 @@ export const userInterestsSchema = z.object({
   favoriteColors: z.array(z.string()),
   occasions: z.array(z.string()),
 });
+
+export const insertOutfitSchema = createInsertSchema(outfits).pick({
+  userId: true,
+  imageUrl: true,
+  title: true,
+  description: true,
+  occasion: true,
+});
+
+export const insertRatingSchema = createInsertSchema(ratings).pick({
+  outfitId: true,
+  styleScore: true,
+  fitScore: true,
+  colorScore: true,
+  feedback: true,
+  suggestions: true,
+});
+
+export type Outfit = typeof outfits.$inferSelect;
+export type Rating = typeof ratings.$inferSelect;
+export type InsertOutfit = z.infer<typeof insertOutfitSchema>;
+export type InsertRating = z.infer<typeof insertRatingSchema>;

@@ -1,4 +1,4 @@
-import { users, savedImages, type User, type InsertUser, type SavedImage } from "@shared/schema";
+import { users, savedImages, outfits, ratings, type User, type InsertUser, type SavedImage, type Outfit, type Rating, type InsertOutfit, type InsertRating } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -8,6 +8,7 @@ import { pool } from "./db";
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
+  // Existing methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
@@ -18,6 +19,13 @@ export interface IStorage {
   getUserSavedImages(userId: number): Promise<SavedImage[]>;
   saveUserImage(userId: number, imageData: Partial<SavedImage>): Promise<SavedImage>;
   sessionStore: session.Store;
+
+  // New methods for outfit rating system
+  createOutfit(outfitData: InsertOutfit): Promise<Outfit>;
+  getOutfit(id: number): Promise<Outfit | undefined>;
+  getUserOutfits(userId: number): Promise<Outfit[]>;
+  createRating(ratingData: InsertRating): Promise<Rating>;
+  getOutfitRating(outfitId: number): Promise<Rating | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -30,6 +38,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  // Existing methods remain unchanged
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -104,6 +113,47 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return savedImage;
+  }
+
+  // New methods for outfit rating system
+  async createOutfit(outfitData: InsertOutfit): Promise<Outfit> {
+    const [outfit] = await db
+      .insert(outfits)
+      .values(outfitData)
+      .returning();
+    return outfit;
+  }
+
+  async getOutfit(id: number): Promise<Outfit | undefined> {
+    const [outfit] = await db
+      .select()
+      .from(outfits)
+      .where(eq(outfits.id, id));
+    return outfit;
+  }
+
+  async getUserOutfits(userId: number): Promise<Outfit[]> {
+    return db
+      .select()
+      .from(outfits)
+      .where(eq(outfits.userId, userId))
+      .orderBy(outfits.createdAt);
+  }
+
+  async createRating(ratingData: InsertRating): Promise<Rating> {
+    const [rating] = await db
+      .insert(ratings)
+      .values(ratingData)
+      .returning();
+    return rating;
+  }
+
+  async getOutfitRating(outfitId: number): Promise<Rating | undefined> {
+    const [rating] = await db
+      .select()
+      .from(ratings)
+      .where(eq(ratings.outfitId, outfitId));
+    return rating;
   }
 }
 

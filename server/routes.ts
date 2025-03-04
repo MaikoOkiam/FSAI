@@ -245,6 +245,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New routes for outfit rating system
+  app.post("/api/outfits", upload.single("image"), async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const user = req.user!;
+      if (user.credits < 2) return res.status(402).json({ error: "Insufficient credits" });
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No image uploaded" });
+      }
+
+      // Upload image and get URL (implementation needed)
+      const imageUrl = req.file.buffer.toString("base64");
+
+      const outfit = await storage.createOutfit({
+        userId: user.id,
+        imageUrl,
+        title: req.body.title,
+        description: req.body.description,
+        occasion: req.body.occasion,
+      });
+
+      // Analyze outfit using OpenAI
+      const analysis = await analyzeOutfit(imageUrl, {
+        occasion: req.body.occasion,
+        style: user.preferences.style,
+      });
+
+      const rating = await storage.createRating({
+        outfitId: outfit.id,
+        styleScore: analysis.styleScore,
+        fitScore: analysis.fitScore,
+        colorScore: analysis.colorScore,
+        feedback: analysis.feedback,
+        suggestions: analysis.suggestions,
+      });
+
+      // Deduct credits
+      await storage.updateUserCredits(user.id, user.credits - 2);
+
+      res.status(201).json({ outfit, rating });
+    } catch (error) {
+      console.error("Error creating outfit rating:", error);
+      res.status(500).json({ error: "Failed to create outfit rating" });
+    }
+  });
+
+  app.get("/api/outfits", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const outfits = await storage.getUserOutfits(req.user!.id);
+      res.json(outfits);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch outfits" });
+    }
+  });
+
+  app.get("/api/outfits/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const outfit = await storage.getOutfit(parseInt(req.params.id));
+      if (!outfit) return res.status(404).json({ error: "Outfit not found" });
+      if (outfit.userId !== req.user!.id) return res.sendStatus(403);
+
+      const rating = await storage.getOutfitRating(outfit.id);
+      res.json({ outfit, rating });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch outfit" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
