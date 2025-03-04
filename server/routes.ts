@@ -391,6 +391,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+  // Add these new routes inside the registerRoutes function, before httpServer creation
+
+  // Profile image upload endpoint
+  app.post("/api/profile/upload-image", upload.single("image"), async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.file) return res.status(400).json({ error: "No image provided" });
+
+    try {
+      const imageType = req.body.type; // 'portrait' or 'fullBody'
+      const imageUrl = req.file.buffer.toString("base64");
+
+      const savedImage = await storage.saveUserImage(req.user!.id, {
+        imageUrl,
+        imageType,
+        title: `${imageType} Photo`,
+      });
+
+      res.json(savedImage);
+    } catch (error) {
+      console.error("Failed to save profile image:", error);
+      res.status(500).json({ error: "Failed to save image" });
+    }
+  });
+
+  // Save user preferences endpoint
+  app.post("/api/profile/preferences", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { preferences, interests } = req.body;
+
+      // Update user preferences and interests
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          preferences,
+          interests,
+        })
+        .where(eq(users.id, req.user!.id))
+        .returning();
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      res.status(500).json({ error: "Failed to save preferences" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -13,6 +13,7 @@ import ProfilePage from "@/pages/profile-page";
 import NotFound from "@/pages/not-found";
 import ImprintPage from "@/pages/imprint";
 import SetupPasswordPage from "@/pages/setup-password";
+import OnboardingPage from "@/pages/onboarding";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <ProtectedRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
+      <ProtectedRoute path="/onboarding" component={OnboardingPage} />
       <Route component={NotFound} />
     </Switch>
   );
