@@ -26,7 +26,7 @@ export function NavBar() {
     <nav className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <a className="text-2xl font-bold text-primary">Eva Harper</a>
+          <a className="text-2xl logo text-primary">Eva Harper</a>
         </Link>
 
         <NavigationMenu>
@@ -73,7 +73,7 @@ export function NavBar() {
                         <Link href="/profile">
                           <div className="flex items-center">
                             <User className="mr-2 h-4 w-4" />
-                            <span>Mein Profil</span>
+                            <span>My Profile</span>
                           </div>
                         </Link>
                       </DropdownMenuItem>
@@ -82,7 +82,7 @@ export function NavBar() {
                         onClick={() => logoutMutation.mutate()}
                         className="text-red-500"
                       >
-                        Abmelden
+                        Sign Out
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -91,7 +91,7 @@ export function NavBar() {
             ) : (
               <NavigationMenuItem>
                 <Link href="/auth">
-                  <Button>Anmelden</Button>
+                  <Button>Sign In</Button>
                 </Link>
               </NavigationMenuItem>
             )}

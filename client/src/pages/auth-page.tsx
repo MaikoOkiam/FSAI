@@ -63,15 +63,15 @@ export default function AuthPage() {
       <div className="w-full max-w-[1200px] grid md:grid-cols-2 gap-8">
         {/* Info Section - Now visible on both mobile and desktop */}
         <div className="flex flex-col justify-center order-1 md:order-1">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Willkommen bei Eva Harper</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome to Eva Harper</h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8">
-            Ihr KI-gestützter Mode-Begleiter. Erhalten Sie personalisierte Stilberatung,
-            virtuelle Anproben und mehr.
+            Your AI-powered fashion companion. Get personalized style advice,
+            virtual try-ons, and more.
           </p>
           <Alert className="mb-8">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Momentan ist der Zugang nur auf Einladung möglich. Bitte registrieren Sie sich auf der Warteliste.
+              Currently access is by invitation only. Please register on the waitlist.
             </AlertDescription>
           </Alert>
           <img
@@ -85,16 +85,16 @@ export default function AuthPage() {
         <div className="order-2 md:order-2">
           <Card className="w-full">
             <CardHeader>
-              <CardTitle>Anmelden oder Registrieren</CardTitle>
+              <CardTitle>Sign In or Register</CardTitle>
               <CardDescription>
-                Greifen Sie auf Ihr Eva Harper Mode-Konto zu
+                Access your Eva Harper fashion account
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="register">Registrieren</TabsTrigger>
+                  <TabsTrigger value="register">Register</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login">
@@ -110,7 +110,7 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Benutzername</FormLabel>
+                            <FormLabel>Username</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
@@ -123,7 +123,7 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Passwort</FormLabel>
+                            <FormLabel>Password</FormLabel>
                             <FormControl>
                               <Input type="password" {...field} />
                             </FormControl>
@@ -136,7 +136,7 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={loginMutation.isPending}
                       >
-                        Anmelden
+                        Sign In
                       </Button>
                       <Button
                         type="button"
@@ -144,7 +144,7 @@ export default function AuthPage() {
                         className="w-full"
                         onClick={() => setLocation("/#waitlist-form")}
                       >
-                        Zur Warteliste
+                        Join Waitlist
                       </Button>
                     </form>
                   </Form>
@@ -154,14 +154,14 @@ export default function AuthPage() {
                   <Alert className="mb-4">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Die Registrierung ist momentan nur auf Einladung möglich. Bitte registrieren Sie sich auf der Warteliste.
+                      Registration is currently by invitation only. Please join our waitlist.
                     </AlertDescription>
                   </Alert>
                   <Button
                     className="w-full"
                     onClick={() => setLocation("/#waitlist-form")}
                   >
-                    Zur Warteliste
+                    Join Waitlist
                   </Button>
                 </TabsContent>
               </Tabs>
