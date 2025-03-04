@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { NavBar } from "@/components/layout/nav-bar";
@@ -23,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 type WaitlistEntry = {
   id: number;
@@ -37,6 +39,8 @@ export default function AdminPage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Check if user has admin access
   useEffect(() => {
@@ -67,24 +71,6 @@ export default function AdminPage() {
     },
     enabled: !!user && user.username.includes("admin"),
   });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">Loading waitlist entries...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center text-red-500">
-          Error loading waitlist: {error.message}
-        </div>
-      </div>
-    );
-  }
 
   const approveMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -126,39 +112,80 @@ export default function AdminPage() {
     }
   }
 
+  // Always render a consistent component structure with hooks
   if (!user || !user.username.includes("admin")) {
     return null;
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <div className="flex items-center justify-center p-8">
+          <div className="text-center">Loading waitlist entries...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <div className="flex items-center justify-center p-8">
+          <div className="text-center text-red-500">
+            Error loading waitlist: {(error as Error).message}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleApprove = (email: string) => {
+    approveMutation.mutate(email);
+  };
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = waitlistEntries?.slice(indexOfFirstItem, indexOfLastItem) || [];
+  const totalPages = Math.ceil((waitlistEntries?.length || 0) / itemsPerPage);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col">
       <NavBar />
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader>
             <CardTitle>Waitlist Management</CardTitle>
             <CardDescription>
-              Approve users from the waitlist to give them access to registration
+              Approve or manage users in the waitlist
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
-              <TableCaption>List of users in the waitlist</TableCaption>
+              <TableCaption>
+                A list of users waiting for approval to use the platform
+              </TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Reason</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {waitlistEntries?.map((entry) => (
+                {currentItems.map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell>{entry.name}</TableCell>
                     <TableCell>{entry.email}</TableCell>
-                    <TableCell>{new Date(entry.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{entry.reason || "N/A"}</TableCell>
+                    <TableCell>
+                      {new Date(entry.createdAt).toLocaleDateString()}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={getStatusVariant(entry.status)}>
                         {entry.status}
@@ -168,7 +195,7 @@ export default function AdminPage() {
                       {entry.status === "pending" && (
                         <Button
                           size="sm"
-                          onClick={() => approveMutation.mutate(entry.email)}
+                          onClick={() => handleApprove(entry.email)}
                           disabled={approveMutation.isPending}
                         >
                           Approve
@@ -177,15 +204,39 @@ export default function AdminPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {!waitlistEntries?.length && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">
-                      No waitlist entries found
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
+            
+            {totalPages > 1 && (
+              <Pagination className="mt-4">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink 
+                        isActive={currentPage === i + 1} 
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
           </CardContent>
         </Card>
       </div>
