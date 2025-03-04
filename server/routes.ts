@@ -8,6 +8,7 @@ import multer from "multer";
 import { z } from "zod";
 import { db } from "./db";
 import { waitlist } from "@shared/schema";
+import { sendWaitlistConfirmation } from "./email";
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -35,12 +36,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       - Wir prüfen die Anfrage und melden uns bald
       - Der Zugang wird per E-Mail mitgeteilt
       Nutze Emojis und halte es freundlich!`).then(async (emailContent) => {
-        console.log("Would send email to", data.email, "with content:", emailContent);
-        // Here we would integrate with a real email service
+        await sendWaitlistConfirmation(data.email, emailContent);
       });
 
       res.status(201).json(entry);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === '23505') { // Unique violation
         res.status(400).json({ error: "Diese E-Mail-Adresse ist bereits registriert" });
       } else {
