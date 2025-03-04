@@ -35,6 +35,17 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Eva Image Section */}
+        <section className="py-16 px-4">
+          <div className="container mx-auto max-w-2xl">
+            <img
+              src="/attached_assets/out-0.webp"
+              alt="Eva Harper - Your AI Fashion Assistant"
+              className="w-full h-auto rounded-lg shadow-xl"
+            />
+          </div>
+        </section>
+
         {/* Features Section */}
         <section className="py-20 px-4">
           <div className="container mx-auto">
