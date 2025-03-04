@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { NavBar } from "@/components/layout/nav-bar";
@@ -21,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -37,11 +36,12 @@ type WaitlistEntry = {
 export default function AdminPage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
-  
+  const { toast } = useToast();
+
   // Check if user has admin access
   useEffect(() => {
     if (!user) {
-      setLocation("/login");
+      setLocation("/auth");
     } else if (!user.username.includes("admin")) {
       toast({
         title: "Access Denied",
@@ -50,10 +50,10 @@ export default function AdminPage() {
       });
       setLocation("/dashboard");
     }
-  }, [user, setLocation]);
-  
+  }, [user, setLocation, toast]);
+
   const { data: waitlistEntries, refetch } = useQuery<WaitlistEntry[]>({
-    queryKey: ["waitlist"],
+    queryKey: ["/api/admin/waitlist"],
     queryFn: async () => {
       const res = await fetch("/api/admin/waitlist");
       if (!res.ok) throw new Error("Failed to fetch waitlist");
@@ -61,7 +61,7 @@ export default function AdminPage() {
     },
     enabled: !!user && user.username.includes("admin"),
   });
-  
+
   const approveMutation = useMutation({
     mutationFn: async (email: string) => {
       const res = await fetch("/api/admin/waitlist/approve", {
@@ -90,11 +90,22 @@ export default function AdminPage() {
       });
     },
   });
-  
+
+  function getStatusVariant(status: string): "default" | "secondary" | "outline" {
+    switch (status) {
+      case "approved":
+        return "outline";
+      case "registered":
+        return "default";
+      default:
+        return "secondary";
+    }
+  }
+
   if (!user || !user.username.includes("admin")) {
     return null;
   }
-  
+
   return (
     <div className="min-h-screen bg-background">
       <NavBar />
@@ -125,12 +136,7 @@ export default function AdminPage() {
                     <TableCell>{entry.email}</TableCell>
                     <TableCell>{new Date(entry.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={
-                          entry.status === "approved" ? "success" : 
-                          entry.status === "registered" ? "default" : "secondary"
-                        }
-                      >
+                      <Badge variant={getStatusVariant(entry.status)}>
                         {entry.status}
                       </Badge>
                     </TableCell>
