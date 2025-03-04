@@ -30,11 +30,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .returning();
 
       // Send confirmation email
-      await getFashionAdvice(`Compose a welcome email for ${data.name}:
-      - Thank them for joining Eva Harper's waitlist
-      - Let them know we'll review their application shortly
-      - Mention they'll receive access information via email
-      Include emoji and keep it friendly!`).then(async (emailContent) => {
+      await getFashionAdvice(`Compose a welcome email in German for ${data.name}:
+      - Danke für die Registrierung auf der Eva Harper Warteliste
+      - Wir prüfen die Anfrage und melden uns bald
+      - Der Zugang wird per E-Mail mitgeteilt
+      Nutze Emojis und halte es freundlich!`).then(async (emailContent) => {
         console.log("Would send email to", data.email, "with content:", emailContent);
         // Here we would integrate with a real email service
       });
