@@ -17,7 +17,7 @@ const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 32)) as Buffer;
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
@@ -25,7 +25,7 @@ async function comparePasswords(supplied: string, stored: string) {
   try {
     const [hashedPassword, salt] = stored.split(".");
     const hashedBuf = Buffer.from(hashedPassword, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 32)) as Buffer;
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
     return timingSafeEqual(hashedBuf, suppliedBuf);
   } catch (error) {
     console.error("[Auth Debug] Password comparison error:", error);
@@ -64,7 +64,7 @@ export function setupAuth(app: Express) {
 
         if (!user) {
           console.log("[Auth Debug] User not found");
-          return done(null, false);
+          return done(null, false, { message: "Invalid username or password" });
         }
 
         try {
@@ -72,7 +72,7 @@ export function setupAuth(app: Express) {
           console.log("[Auth Debug] Password valid:", passwordValid);
 
           if (!passwordValid) {
-            return done(null, false);
+            return done(null, false, { message: "Invalid username or password" });
           }
 
           console.log("[Auth Debug] Login successful");
@@ -115,7 +115,7 @@ export function setupAuth(app: Express) {
       }
 
       const hashedPassword = await hashPassword(req.body.password);
-      console.log("[Auth Debug] Password hashed");
+      console.log("[Auth Debug] Password hashed successfully");
 
       const user = await storage.createUser({
         ...req.body,
@@ -133,9 +133,25 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    console.log("[Auth Debug] Login successful, sending response");
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        console.error("[Auth Debug] Authentication error:", err);
+        return next(err);
+      }
+      if (!user) {
+        console.log("[Auth Debug] Authentication failed:", info?.message);
+        return res.status(401).json({ message: info?.message || "Authentication failed" });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          console.error("[Auth Debug] Login error:", err);
+          return next(err);
+        }
+        console.log("[Auth Debug] Login successful");
+        res.json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
