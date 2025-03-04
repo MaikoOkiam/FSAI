@@ -50,7 +50,7 @@ export default function LandingPage() {
               </div>
               <div className="order-first md:order-last">
                 <img
-                  src="/attached_assets/out-0.webp"
+                  src="/assets/eva-harper.webp"
                   alt="Eva Harper - Your AI Fashion Assistant"
                   className="w-full rounded-lg shadow-xl"
                 />
