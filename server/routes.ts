@@ -119,57 +119,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-  // Admin endpoint to approve waitlist members
-  app.post("/api/admin/waitlist/approve", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    // Check if user is an admin (you can add an admin field to the user schema later)
-    const user = req.user!;
-    if (!user.username.includes("admin")) return res.sendStatus(403);
-    
-    try {
-      const { email } = req.body;
-      if (!email) return res.status(400).json({ error: "Email is required" });
-      
-      // Update waitlist entry status to approved
-      const [entry] = await db
-        .update(waitlist)
-        .set({ status: "approved" })
-        .where(waitlist.email.eq(email))
-        .returning();
-      
-      if (!entry) {
-        return res.status(404).json({ error: "Email not found in waitlist" });
-      }
-      
-      res.json({ success: true, entry });
-    } catch (error) {
-      console.error('Waitlist approval error:', error);
-      res.status(500).json({ error: "Failed to approve waitlist member" });
-    }
-  });
-  
-  // Admin endpoint to list all waitlist entries
-  app.get("/api/admin/waitlist", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    // Check if user is an admin
-    const user = req.user!;
-    if (!user.username.includes("admin")) return res.sendStatus(403);
-    
-    try {
-      const entries = await db
-        .select()
-        .from(waitlist)
-        .orderBy(waitlist.createdAt.desc());
-      
-      res.json(entries);
-    } catch (error) {
-      console.error('Waitlist listing error:', error);
-      res.status(500).json({ error: "Failed to list waitlist entries" });
-    }
-  });
-
       const sourceImage = files.sourceImage[0];
       const targetImage = files.targetImage[0];
       const prompt = req.body.prompt;
@@ -206,94 +155,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User preferences endpoint
-  app.patch("/api/user/preferences", async (req, res) => {
+  // Admin endpoint to approve waitlist members
+  app.post("/api/admin/waitlist/approve", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
+    // Check if user is an admin (you can add an admin field to the user schema later)
+    const user = req.user!;
+    if (!user.username.includes("admin")) return res.sendStatus(403);
+
     try {
-      await storage.updateUserPreferences(req.user!.id, req.body);
-      res.json({ success: true });
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ error: "Email is required" });
+
+      // Update waitlist entry status to approved
+      const [entry] = await db
+        .update(waitlist)
+        .set({ status: "approved" })
+        .where(waitlist.email.eq(email))
+        .returning();
+
+      if (!entry) {
+        return res.status(404).json({ error: "Email not found in waitlist" });
+      }
+
+      res.json({ success: true, entry });
     } catch (error) {
-      res.status(500).json({ error: "Failed to update preferences" });
+      console.error('Waitlist approval error:', error);
+      res.status(500).json({ error: "Failed to approve waitlist member" });
     }
   });
 
-  // User interests endpoint
-  app.patch("/api/user/interests", async (req, res) => {
+  // Admin endpoint to list all waitlist entries
+  app.get("/api/admin/waitlist", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    try {
-      await storage.updateUserInterests(req.user!.id, req.body);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update interests" });
-    }
-  });
-
-  // Get saved images endpoint
-  app.get("/api/images/saved", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    // Check if user is an admin
+    const user = req.user!;
+    if (!user.username.includes("admin")) return res.sendStatus(403);
 
     try {
-      const images = await storage.getUserSavedImages(req.user!.id);
-      res.json(images);
+      console.log("[Admin Debug] Fetching waitlist entries");
+      const entries = await db
+        .select()
+        .from(waitlist)
+        .orderBy(waitlist.createdAt.desc());
+
+      console.log("[Admin Debug] Found entries:", entries);
+      res.json(entries);
     } catch (error) {
-      res.status(500).json({ error: "Failed to fetch saved images" });
-    }
-  });
-
-  // Save image endpoint
-  app.post("/api/images/save", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const savedImage = await storage.saveUserImage(req.user!.id, req.body);
-      res.json(savedImage);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to save image" });
-    }
-  });
-
-  // Purchase credits endpoint
-  app.post("/api/credits/purchase", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const schema = z.object({
-      amount: z.number().min(5).max(100)
-    });
-
-    try {
-      const { amount } = schema.parse(req.body);
-      const user = req.user!;
-      await storage.updateUserCredits(user.id, user.credits + amount);
-      res.json({ credits: user.credits + amount });
-    } catch (error) {
-      res.status(400).json({ error: "Invalid request" });
-    }
-  });
-
-  // Purchase subscription endpoint
-  app.post("/api/subscription/purchase", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const schema = z.object({
-      plan: z.enum(["monthly", "yearly"])
-    });
-
-    try {
-      const { plan } = schema.parse(req.body);
-      const user = req.user!;
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + (plan === "yearly" ? 12 : 1));
-
-      await storage.updateUserSubscription(
-        user.id,
-        plan,
-        endDate.toISOString()
-      );
-      res.json({ subscription: plan, subscriptionEnds: endDate.toISOString() });
-    } catch (error) {
-      res.status(400).json({ error: "Invalid request" });
+      console.error('Waitlist listing error:', error);
+      res.status(500).json({ error: "Failed to list waitlist entries" });
     }
   });
 

@@ -52,15 +52,39 @@ export default function AdminPage() {
     }
   }, [user, setLocation, toast]);
 
-  const { data: waitlistEntries, refetch } = useQuery<WaitlistEntry[]>({
+  const { data: waitlistEntries, refetch, isLoading, error } = useQuery<WaitlistEntry[]>({
     queryKey: ["/api/admin/waitlist"],
     queryFn: async () => {
+      console.log("[Admin Debug] Fetching waitlist data");
       const res = await fetch("/api/admin/waitlist");
-      if (!res.ok) throw new Error("Failed to fetch waitlist");
-      return res.json();
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to fetch waitlist");
+      }
+      const data = await res.json();
+      console.log("[Admin Debug] Received waitlist data:", data);
+      return data;
     },
     enabled: !!user && user.username.includes("admin"),
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">Loading waitlist entries...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center text-red-500">
+          Error loading waitlist: {error.message}
+        </div>
+      </div>
+    );
+  }
 
   const approveMutation = useMutation({
     mutationFn: async (email: string) => {
