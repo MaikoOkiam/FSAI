@@ -7,10 +7,11 @@ import { generateStyleTransfer } from "./replicate";
 import multer from "multer";
 import { z } from "zod";
 import { db } from "./db";
-import { waitlist } from "@shared/schema";
-import { sendWaitlistConfirmation } from "./email";
+import { waitlist, users } from "@shared/schema";
+import { sendWaitlistConfirmation, sendPasswordSetupEmail } from "./email";
 import mailjet from "./mailjet";
 import { desc, eq } from "drizzle-orm";
+import { randomBytes } from "crypto";
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -160,7 +161,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/waitlist/approve", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    // Check if user is an admin
     const user = req.user!;
     if (!user.username.includes("admin")) return res.sendStatus(403);
 
@@ -192,6 +192,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Generate a unique token for password setup
+      const token = randomBytes(32).toString('hex');
+      const tokenExpires = new Date();
+      tokenExpires.setHours(tokenExpires.getHours() + 24); // Token valid for 24 hours
+
+      // Create user account with temporary token
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          email: existingEntry.email,
+          username: existingEntry.email.split('@')[0], // Temporary username from email
+          password: token, // Temporary password
+          passwordResetToken: token,
+          passwordResetExpires: tokenExpires,
+          hasAccess: true
+        })
+        .returning();
+
       // Update waitlist entry status to approved
       const [updatedEntry] = await db
         .update(waitlist)
@@ -206,7 +224,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to update waitlist status" });
       }
 
-      console.log("[Admin Debug] Successfully approved entry:", updatedEntry);
+      // Send password setup email
+      await sendPasswordSetupEmail(email, token);
+
+      console.log("[Admin Debug] Successfully approved entry and created user:", updatedEntry);
       res.json({ success: true, entry: updatedEntry });
     } catch (error) {
       console.error('[Admin Debug] Waitlist approval error:', error);
@@ -310,6 +331,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch outfit" });
     }
   });
+
+  app.post("/api/auth/setup-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+
+      // Find user with valid token
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.passwordResetToken, token))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "Invalid or expired token" });
+      }
+
+      // Check if token is expired
+      if (user.passwordResetExpires && new Date(user.passwordResetExpires) < new Date()) {
+        return res.status(400).json({ message: "Token has expired" });
+      }
+
+      // Update user's password and clear reset token
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          password: password, // Note: In production, this should be hashed
+          passwordResetToken: null,
+          passwordResetExpires: null
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+
+      res.json({ success: true, message: "Password set successfully" });
+    } catch (error) {
+      console.error('Password setup error:', error);
+      res.status(500).json({ message: "Failed to set password" });
+    }
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
