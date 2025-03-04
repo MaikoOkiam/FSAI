@@ -19,13 +19,14 @@ export default function LandingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
 
   const waitlistMutation = useMutation({
-    mutationFn: async (email: string) => {
+    mutationFn: async (data: { email: string; name: string }) => {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(data),
       });
       if (!res.ok) {
         const error = await res.json();
@@ -39,6 +40,7 @@ export default function LandingPage() {
         description: "Wir werden Sie benachrichtigen, sobald Ihr Zugang freigeschaltet wird.",
       });
       setEmail("");
+      setName("");
     },
     onError: (error: Error) => {
       toast({
@@ -51,7 +53,7 @@ export default function LandingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    waitlistMutation.mutate(email);
+    waitlistMutation.mutate({ email, name });
   };
 
   return (
@@ -85,6 +87,15 @@ export default function LandingPage() {
             <Card className="max-w-md mx-auto" id="waitlist-form">
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Input
+                      type="text"
+                      placeholder="Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
                   <div>
                     <Input
                       type="email"

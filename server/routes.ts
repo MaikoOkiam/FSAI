@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = {
         email: req.body.email,
-        name: req.body.email.split('@')[0], // Use part before @ as name
+        name: req.body.name, // Use the provided name
         reason: "" // Empty reason
       };
       const [entry] = await db
