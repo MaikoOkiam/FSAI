@@ -33,6 +33,7 @@ import { Separator } from "@/components/ui/separator";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { PurchaseCredits } from "@/components/credits/purchase-credits";
 
 const fashionStyles = [
   "Casual",
@@ -77,20 +78,6 @@ const hairStyles = [
   "Glatze",
   "Undercut"
 ];
-
-// Placeholder component -  Needs actual Stripe implementation
-const PurchaseCredits = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Purchase Credits</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p>Credit purchase functionality will be added here.</p>
-      </CardContent>
-    </Card>
-  );
-};
 
 
 export default function ProfilePage() {
@@ -341,8 +328,19 @@ export default function ProfilePage() {
           </Card>
 
           {/* Add Credit Purchase Section */}
-          <div id="credits"></div>
-          <PurchaseCredits />
+          <div id="credits">
+            <Card>
+              <CardHeader>
+                <CardTitle>Credits kaufen</CardTitle>
+                <CardDescription>
+                  Erwerben Sie Credits für die Nutzung von AI-Features
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PurchaseCredits />
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Benachrichtigungseinstellungen */}
           <Card>
