@@ -477,7 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Credit purchase endpoints
+  // Credit purchase endpoints from edited snippet
   app.get("/api/credits/packages", (req, res) => {
     res.json(CREDIT_PRICES);
   });
