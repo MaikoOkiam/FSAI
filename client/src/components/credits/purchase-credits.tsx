@@ -175,7 +175,7 @@ export function PurchaseCredits() {
                     </Label>
                   </div>
                 ))}
-              </RadioGroup>
+              </RadioGroup>>
 
               <div className="mt-6 text-center">
                   <p className="text-sm text-muted-foreground mb-4">
