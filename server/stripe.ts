@@ -18,4 +18,5 @@ export type CreditPackage = keyof typeof CREDIT_PRICES;
 
 export function isCreditPackage(value: string): value is CreditPackage {
   return value in CREDIT_PRICES;
+}S;
 }

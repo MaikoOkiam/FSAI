@@ -159,7 +159,7 @@ export function PurchaseCredits() {
                 <p className="text-sm text-muted-foreground mb-2">
                   Aktuelles Guthaben: <strong>{user?.credits} Credits</strong>
                 </p>
-              </div>
+              </div>>
 
               <RadioGroup 
                 value={selectedPackage} 
@@ -175,7 +175,7 @@ export function PurchaseCredits() {
                     </Label>
                   </div>
                 ))}
-              </RadioGroup>
+              </RadioGroup>>
 
               <div className="mt-6 text-center">
                   <p className="text-sm text-muted-foreground mb-4">
