@@ -4,26 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Loader2, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-
-const occasions = [
-  "Casual Day Out",
-  "Office Work",
-  "Formal Event",
-  "Date Night",
-  "Wedding Guest",
-  "Beach Party",
-  "Business Meeting",
-];
 
 export default function OutfitRating() {
   const { toast } = useToast();
@@ -91,19 +74,17 @@ export default function OutfitRating() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="occasion">Select Occasion</Label>
-              <Select onValueChange={setOccasion} value={occasion}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose an occasion" />
-                </SelectTrigger>
-                <SelectContent>
-                  {occasions.map((occ) => (
-                    <SelectItem key={occ} value={occ}>
-                      {occ}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="occasion">Anlass beschreiben</Label>
+              <Input
+                id="occasion"
+                placeholder="z.B. Hochzeit, Vorstellungsgespräch, Date Night..."
+                value={occasion}
+                onChange={(e) => setOccasion(e.target.value)}
+                required
+              />
+              <p className="text-sm text-muted-foreground">
+                Beschreiben Sie den Anlass, für den Sie das Outfit tragen möchten
+              </p>
             </div>
 
             {previewUrl && (
@@ -126,7 +107,7 @@ export default function OutfitRating() {
               ) : (
                 <Star className="h-4 w-4 mr-2" />
               )}
-              Rate Outfit
+              Outfit bewerten
             </Button>
 
             <p className="text-sm text-muted-foreground text-center">
