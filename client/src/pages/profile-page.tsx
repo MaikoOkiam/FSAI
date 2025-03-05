@@ -78,6 +78,21 @@ const hairStyles = [
   "Undercut"
 ];
 
+// Placeholder component -  Needs actual Stripe implementation
+const PurchaseCredits = () => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Purchase Credits</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>Credit purchase functionality will be added here.</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -324,6 +339,9 @@ export default function ProfilePage() {
               </Form>
             </CardContent>
           </Card>
+
+          {/* Add Credit Purchase Section */}
+          <PurchaseCredits />
 
           {/* Benachrichtigungseinstellungen */}
           <Card>

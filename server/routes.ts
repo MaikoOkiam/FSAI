@@ -24,6 +24,7 @@ import { sendWaitlistConfirmation, sendPasswordSetupEmail } from "./email";
 import mailjet from "./mailjet";
 import { desc, eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { stripe, CREDIT_PRICES, isCreditPackage } from "./stripe";
 
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
@@ -473,6 +474,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to skip onboarding:", error);
       res.status(500).json({ error: "Failed to skip onboarding" });
+    }
+  });
+
+  // Credit purchase endpoints
+  app.get("/api/credits/packages", (req, res) => {
+    res.json(CREDIT_PRICES);
+  });
+
+  // Create a payment intent for purchasing credits
+  app.post("/api/credits/create-payment-intent", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { creditPackage } = req.body;
+      
+      if (!isCreditPackage(creditPackage)) {
+        return res.status(400).json({ error: "Invalid credit package" });
+      }
+
+      const amount = CREDIT_PRICES[creditPackage];
+      const credits = parseInt(creditPackage, 10);
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "eur",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+        metadata: {
+          userId: req.user!.id.toString(),
+          credits: credits.toString(),
+        },
+      });
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        amount,
+        credits,
+      });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ error: "Failed to create payment intent" });
+    }
+  });
+
+  // Handle successful payments and add credits to the user
+  app.post("/api/credits/payment-success", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { paymentIntentId } = req.body;
+      
+      // Verify the payment intent
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status !== "succeeded") {
+        return res.status(400).json({ error: "Payment not successful" });
+      }
+      
+      const userId = parseInt(paymentIntent.metadata.userId, 10);
+      const credits = parseInt(paymentIntent.metadata.credits, 10);
+      
+      // Ensure the user making the request is the one who made the payment
+      if (userId !== req.user!.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+      
+      // Add credits to the user's account
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          credits: req.user!.credits + credits,
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error("Error processing payment success:", error);
+      res.status(500).json({ error: "Failed to process payment" });
+    }
+  });
+
+  // Stripe webhook to handle events
+  app.post("/api/webhook/stripe", async (req, res) => {
+    const signature = req.headers["stripe-signature"] as string;
+    
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.warn("STRIPE_WEBHOOK_SECRET is not set. Webhook verification is disabled.");
+      return res.status(400).send("Webhook secret not configured");
+    }
+    
+    try {
+      const event = stripe.webhooks.constructEvent(
+        req.body,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+      
+      // Handle the event
+      if (event.type === "payment_intent.succeeded") {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        const userId = parseInt(paymentIntent.metadata.userId, 10);
+        const credits = parseInt(paymentIntent.metadata.credits, 10);
+        
+        // Update the user's credits
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, userId));
+        
+        if (user) {
+          await db
+            .update(users)
+            .set({
+              credits: user.credits + credits,
+            })
+            .where(eq(users.id, userId));
+          
+          console.log(`Added ${credits} credits to user ${userId}`);
+        }
+      }
+      
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Webhook error:", error);
+      res.status(400).send(`Webhook Error: ${error.message}`);
     }
   });
 

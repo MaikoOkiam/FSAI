@@ -10,7 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   passwordResetToken: text("password_reset_token"),
   passwordResetExpires: timestamp("password_reset_expires"),
-  credits: integer("credits").notNull().default(10),
+  credits: integer("credits").notNull().default(100),
   subscription: text("subscription").default("free"),
   subscriptionEnds: text("subscription_ends"),
   interests: jsonb("interests").default({}).notNull(),
