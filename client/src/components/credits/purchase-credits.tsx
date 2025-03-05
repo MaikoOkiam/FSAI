@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast'; // Corrected import path
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -160,7 +159,7 @@ export function PurchaseCredits() {
                 <p className="text-sm text-muted-foreground mb-2">
                   Aktuelles Guthaben: <strong>{user?.credits} Credits</strong>
                 </p>
-              </div>>
+              </div>
 
               <RadioGroup 
                 value={selectedPackage} 
@@ -176,7 +175,7 @@ export function PurchaseCredits() {
                     </Label>
                   </div>
                 ))}
-              </RadioGroup>>
+              </RadioGroup>
 
               <div className="mt-6 text-center">
                   <p className="text-sm text-muted-foreground mb-4">
