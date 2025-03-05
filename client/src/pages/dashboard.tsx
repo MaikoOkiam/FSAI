@@ -5,6 +5,7 @@ import ChatAdvisor from "@/components/fashion/chat-advisor";
 import VirtualTryOn from "@/components/fashion/virtual-try-on";
 import StyleTransfer from "@/components/fashion/style-transfer";
 import OutfitRating from "@/components/fashion/outfit-rating";
+import { PurchaseCredits } from "@/components/credits/purchase-credits";
 
 export default function Dashboard() {
   const [location] = useLocation();
@@ -17,11 +18,12 @@ export default function Dashboard() {
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <Tabs defaultValue={defaultTab} className="space-y-8">
-          <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-2 lg:grid-cols-5 w-full">
             <TabsTrigger value="chat">Fashion Advisor</TabsTrigger>
             <TabsTrigger value="try-on">Virtual Try-On</TabsTrigger>
             <TabsTrigger value="transfer">Style Transfer</TabsTrigger>
             <TabsTrigger value="rate">Outfit Rating</TabsTrigger>
+            <TabsTrigger value="credits">Credits</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="space-y-4">
@@ -54,6 +56,14 @@ export default function Dashboard() {
               Get feedback on your outfits for any occasion
             </p>
             <OutfitRating />
+          </TabsContent>
+
+          <TabsContent value="credits" className="space-y-4">
+            <h2 className="text-2xl font-bold">Credits verwalten</h2>
+            <p className="text-muted-foreground">
+              Kaufen Sie Credits für Eva Harper's AI-Features
+            </p>
+            <PurchaseCredits />
           </TabsContent>
         </Tabs>
       </main>
