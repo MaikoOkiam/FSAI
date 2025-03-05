@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, User } from "lucide-react";
+import { Settings, User, CreditCard } from "lucide-react";
 
 export function NavBar() {
   const { user, logoutMutation } = useAuth();
@@ -75,6 +75,12 @@ export function NavBar() {
                             <User className="mr-2 h-4 w-4" />
                             <span>My Profile</span>
                           </div>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile#credits">
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          Credits: {user.credits || 0}
                         </Link>
                       </DropdownMenuItem>
                       {user.username.includes("admin") && (

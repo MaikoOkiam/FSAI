@@ -341,6 +341,7 @@ export default function ProfilePage() {
           </Card>
 
           {/* Add Credit Purchase Section */}
+          <div id="credits"></div>
           <PurchaseCredits />
 
           {/* Benachrichtigungseinstellungen */}
