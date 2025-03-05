@@ -488,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const { creditPackage } = req.body;
-      
+
       if (!isCreditPackage(creditPackage)) {
         return res.status(400).json({ error: "Invalid credit package" });
       }
@@ -526,22 +526,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const { paymentIntentId } = req.body;
-      
+
       // Verify the payment intent
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
+
       if (paymentIntent.status !== "succeeded") {
         return res.status(400).json({ error: "Payment not successful" });
       }
-      
+
       const userId = parseInt(paymentIntent.metadata.userId, 10);
       const credits = parseInt(paymentIntent.metadata.credits, 10);
-      
+
       // Ensure the user making the request is the one who made the payment
       if (userId !== req.user!.id) {
         return res.status(403).json({ error: "Unauthorized" });
       }
-      
+
       // Add credits to the user's account
       const [updatedUser] = await db
         .update(users)
@@ -550,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .where(eq(users.id, userId))
         .returning();
-      
+
       res.json({ success: true, user: updatedUser });
     } catch (error) {
       console.error("Error processing payment success:", error);
@@ -561,31 +561,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stripe webhook to handle events
   app.post("/api/webhook/stripe", async (req, res) => {
     const signature = req.headers["stripe-signature"] as string;
-    
+
     if (!process.env.STRIPE_WEBHOOK_SECRET) {
       console.warn("STRIPE_WEBHOOK_SECRET is not set. Webhook verification is disabled.");
       return res.status(400).send("Webhook secret not configured");
     }
-    
+
     try {
       const event = stripe.webhooks.constructEvent(
         req.body,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET
       );
-      
+
       // Handle the event
       if (event.type === "payment_intent.succeeded") {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         const userId = parseInt(paymentIntent.metadata.userId, 10);
         const credits = parseInt(paymentIntent.metadata.credits, 10);
-        
+
         // Update the user's credits
         const [user] = await db
           .select()
           .from(users)
           .where(eq(users.id, userId));
-        
+
         if (user) {
           await db
             .update(users)
@@ -593,11 +593,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               credits: user.credits + credits,
             })
             .where(eq(users.id, userId));
-          
+
           console.log(`Added ${credits} credits to user ${userId}`);
         }
       }
-      
+
       res.json({ received: true });
     } catch (error) {
       console.error("Webhook error:", error);

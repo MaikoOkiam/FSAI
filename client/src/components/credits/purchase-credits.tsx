@@ -160,38 +160,44 @@ export function PurchaseCredits() {
                 <p className="text-sm text-muted-foreground mb-2">
                   Aktuelles Guthaben: <strong>{user?.credits} Credits</strong>
                 </p>
-              </div>
+              </div>>
 
               <RadioGroup 
                 value={selectedPackage} 
                 onValueChange={setSelectedPackage}
                 className="grid grid-cols-2 gap-4"
               >
-                {Object.entries(creditPackages).map(([credits, price]) => (
-                  <div key={credits} className="flex items-center space-x-2 border rounded-md p-4">
+                {creditPackages && Object.entries(creditPackages).map(([credits, price]) => (
+                  <div key={credits} className="flex items-center space-x-2 border rounded-md p-4 hover:border-primary cursor-pointer">
                     <RadioGroupItem value={credits} id={`credits-${credits}`} />
-                    <Label htmlFor={`credits-${credits}`} className="flex-1">
+                    <Label htmlFor={`credits-${credits}`} className="flex-1 cursor-pointer">
                       <div className="font-medium">{credits} Credits</div>
                       <div className="text-sm text-muted-foreground">{formatPrice(price as number)}</div>
                     </Label>
                   </div>
                 ))}
-              </RadioGroup>
+              </RadioGroup>>
 
-              <Button 
-                onClick={() => createPaymentIntent.mutate()} 
-                disabled={createPaymentIntent.isPending}
-                className="w-full mt-4"
-              >
-                {createPaymentIntent.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Wird geladen...
-                  </>
-                ) : (
-                  'Weiter zur Bezahlung'
-                )}
-              </Button>
+              <div className="mt-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Wählen Sie ein Paket und fahren Sie mit der Bezahlung fort
+                  </p>
+                  <Button 
+                    onClick={() => createPaymentIntent.mutate()} 
+                    disabled={createPaymentIntent.isPending}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {createPaymentIntent.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Wird geladen...
+                      </>
+                    ) : (
+                      'Weiter zur Bezahlung'
+                    )}
+                  </Button>
+                </div>
             </>
           ) : (
             createPaymentIntent.data?.clientSecret && (
@@ -202,9 +208,12 @@ export function PurchaseCredits() {
                   appearance: { theme: 'stripe' },
                 }}
               >
-                <div className="mb-4">
-                  <p className="font-medium">Ausgewähltes Paket:</p>
-                  <p>{selectedPackage} Credits für {formatPrice(createPaymentIntent.data.amount)}</p>
+                <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                  <h3 className="font-medium mb-2">Ausgewähltes Paket:</h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold">{selectedPackage} Credits</span>
+                    <span className="text-xl">{formatPrice(createPaymentIntent.data.amount)}</span>
+                  </div>
                 </div>
                 <CheckoutForm 
                   clientSecret={createPaymentIntent.data.clientSecret} 
@@ -212,7 +221,7 @@ export function PurchaseCredits() {
                 />
                 <Button 
                   variant="outline" 
-                  className="w-full mt-2"
+                  className="w-full mt-4"
                   onClick={() => setShowPayment(false)}
                 >
                   Zurück zur Paketauswahl
